@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
 import { useCart } from "../context/CartContext"
 
 function formatPrice(n) {
@@ -8,20 +8,10 @@ function formatPrice(n) {
 }
 
 export default function CheckoutSummary() {
-  const { totalItems, totalPrice, clearCart } = useCart()
-  const [msg, setMsg] = useState(false)
+  const { totalItems, totalPrice } = useCart()
 
   const shipping = totalPrice >= 30000 ? 0 : 2990
   const total = totalPrice + shipping
-
-  function handleCheckout() {
-    setMsg(true)
-  }
-
-  function handleClear() {
-    clearCart()
-    setMsg(false)
-  }
 
   return (
     <div className="checkout-summary">
@@ -42,41 +32,16 @@ export default function CheckoutSummary() {
         <span>{formatPrice(total)}</span>
       </div>
 
-      {!msg ? (
-        <button
-          className="btn btn-green"
-          style={{ width: "100%", marginTop: "20px", justifyContent: "center" }}
-          onClick={handleCheckout}
-        >
-          Finalizar compra →
-        </button>
-      ) : (
-        <>
-          <div
-            className="checkout-msg"
-            style={{ display: "block", marginTop: "16px" }}
-          >
-            🚀 Funcionalidad de pago próximamente disponible. ¡Gracias por tu interés!
-          </div>
-          <button
-            className="btn btn-outline"
-            style={{ width: "100%", marginTop: "12px", justifyContent: "center" }}
-            onClick={handleClear}
-          >
-            Vaciar carrito
-          </button>
-        </>
-      )}
+      <Link
+        href="/checkout"
+        className="btn btn-green"
+        style={{ width: "100%", marginTop: "20px", justifyContent: "center" }}
+      >
+        Finalizar compra →
+      </Link>
 
       {totalPrice < 30000 && (
-        <p
-          style={{
-            marginTop: "12px",
-            fontSize: "0.82rem",
-            color: "var(--celeste-dark)",
-            textAlign: "center",
-          }}
-        >
+        <p style={{ marginTop: "12px", fontSize: "0.82rem", color: "var(--celeste-dark)", textAlign: "center" }}>
           Agregá {formatPrice(30000 - totalPrice)} más para envío gratis 🎁
         </p>
       )}
