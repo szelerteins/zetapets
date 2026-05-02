@@ -37,23 +37,6 @@ export default function Hero() {
           Productos pensados para el bienestar real de tu compañero.
         </p>
 
-        <div className="hero-stats">
-          <div className="hero-stat hero-stat-light">
-            <strong>+1.200</strong>
-            <span>clientes felices</span>
-          </div>
-          <div className="hero-stat-divider hero-stat-divider-light" />
-          <div className="hero-stat hero-stat-light">
-            <strong>14</strong>
-            <span>productos únicos</span>
-          </div>
-          <div className="hero-stat-divider hero-stat-divider-light" />
-          <div className="hero-stat hero-stat-light">
-            <strong>24h</strong>
-            <span>envío express</span>
-          </div>
-        </div>
-
         <div className="hero-ctas">
           <Link href="/productos" className="btn btn-primary btn-lg">
             Ver productos
