@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { useCart } from "../context/CartContext"
 
 const badgeClass = {
@@ -42,8 +43,18 @@ export default function ProductCard({ product }) {
 
   return (
     <article className="product-card">
-      <div className="product-image" style={{ background: gradient }}>
-        <span className="product-emoji">{product.emoji}</span>
+      <div className="product-image" style={!product.image ? { background: gradient } : {}}>
+        {product.image ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            style={{ objectFit: "cover" }}
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : (
+          <span className="product-emoji">{product.emoji}</span>
+        )}
         {product.badge && (
           <span className={`product-badge ${badgeClass[product.badge] || ""}`}>
             {product.badge}

@@ -1,6 +1,20 @@
 import Link from "next/link"
+import Image from "next/image"
+import { existsSync } from "fs"
+import path from "path"
+
+function hasHeroImage() {
+  try {
+    const p = path.join(process.cwd(), "public", "hero.jpg")
+    return existsSync(p)
+  } catch {
+    return false
+  }
+}
 
 export default function Hero() {
+  const showRealImage = hasHeroImage()
+
   return (
     <section className="hero">
       <div className="container">
@@ -50,16 +64,25 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Lado derecho: visual */}
+          {/* Lado derecho: imagen o visual CSS */}
           <div className="hero-visual">
             <div className="hero-image-wrapper">
-
-              {/* Perro Golden Retriever en CSS/SVG */}
               <div className="hero-dog-container">
                 <div className="hero-dog-bg" />
-                <div className="hero-dog-emoji">🐕</div>
 
-                {/* Badges flotantes */}
+                {showRealImage ? (
+                  <Image
+                    src="/hero.jpg"
+                    alt="Mascota feliz con ZetaPets"
+                    fill
+                    priority
+                    style={{ objectFit: "cover", borderRadius: "50%" }}
+                    sizes="440px"
+                  />
+                ) : (
+                  <div className="hero-dog-emoji">🐕</div>
+                )}
+
                 <div className="hero-badge hero-badge-top">
                   <span className="badge-icon">⭐</span>
                   <div>
@@ -84,14 +107,12 @@ export default function Hero() {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Ola decorativa inferior */}
       <div className="hero-wave">
         <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
           <path d="M0 60L48 50C96 40 192 20 288 16.7C384 13 480 27 576 33.3C672 40 768 40 864 35C960 30 1056 20 1152 18.3C1248 17 1344 23 1392 26.7L1440 30V60H0Z" fill="#F5FBFA"/>
