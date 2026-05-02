@@ -1,0 +1,58 @@
+export const categories = [
+  {
+    id: "higiene",
+    name: "Higiene",
+    emoji: "🧴",
+    description: "Cuidado e higiene para tu mascota",
+    color: "#5BC0EB",
+  },
+  {
+    id: "juguetes",
+    name: "Juguetes",
+    emoji: "🎾",
+    description: "Entretenimiento y actividad física",
+    color: "#7AC74F",
+  },
+  {
+    id: "alimentacion",
+    name: "Alimentación",
+    emoji: "🥣",
+    description: "Todo para la comida y la hidratación",
+    color: "#5BC0EB",
+  },
+  {
+    id: "paseo",
+    name: "Paseo",
+    emoji: "🦮",
+    description: "Accesorios para salidas y aventuras",
+    color: "#7AC74F",
+  },
+  {
+    id: "tecnologia",
+    name: "Tecnología",
+    emoji: "📡",
+    description: "Gadgets inteligentes para mascotas",
+    color: "#5BC0EB",
+  },
+  {
+    id: "repuestos",
+    name: "Repuestos",
+    emoji: "🔧",
+    description: "Piezas y filtros de reemplazo",
+    color: "#7AC74F",
+  },
+  {
+    id: "accesorios",
+    name: "Accesorios",
+    emoji: "🔑",
+    description: "Complementos y detalles especiales",
+    color: "#5BC0EB",
+  },
+  {
+    id: "gatos",
+    name: "Gatos",
+    emoji: "🐱",
+    description: "Productos exclusivos para felinos",
+    color: "#7AC74F",
+  },
+]
