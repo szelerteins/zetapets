@@ -1,20 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
-import { existsSync } from "fs"
-import path from "path"
-
-function hasHeroImage() {
-  try {
-    const p = path.join(process.cwd(), "public", "hero.jpg")
-    return existsSync(p)
-  } catch {
-    return false
-  }
-}
 
 export default function Hero() {
-  const showRealImage = hasHeroImage()
-
   return (
     <section className="hero">
       <div className="container">
@@ -64,24 +51,22 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Lado derecho: imagen o visual CSS */}
+          {/* Lado derecho: imagen hero */}
           <div className="hero-visual">
             <div className="hero-image-wrapper">
               <div className="hero-dog-container">
                 <div className="hero-dog-bg" />
 
-                {showRealImage ? (
+                <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", zIndex: 1 }}>
                   <Image
                     src="/hero.jpg"
                     alt="Mascota feliz con ZetaPets"
                     fill
                     priority
-                    style={{ objectFit: "cover", borderRadius: "50%" }}
+                    style={{ objectFit: "cover" }}
                     sizes="440px"
                   />
-                ) : (
-                  <div className="hero-dog-emoji">🐕</div>
-                )}
+                </div>
 
                 <div className="hero-badge hero-badge-top">
                   <span className="badge-icon">⭐</span>

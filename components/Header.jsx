@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useCart } from "../context/CartContext"
@@ -17,20 +18,14 @@ const navLinks = [
 function Logo() {
   return (
     <Link href="/" className="logo" aria-label="ZetaPets - Inicio">
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="36" height="36" rx="10" fill="#5BC0EB"/>
-        <ellipse cx="12" cy="11" rx="3" ry="4" fill="white" opacity="0.9"/>
-        <ellipse cx="24" cy="11" rx="3" ry="4" fill="white" opacity="0.9"/>
-        <ellipse cx="7" cy="19" rx="2.5" ry="3.5" fill="white" opacity="0.9"/>
-        <ellipse cx="29" cy="19" rx="2.5" ry="3.5" fill="white" opacity="0.9"/>
-        <path d="M18 14c-5 0-9 3.5-9 7 0 3 2.5 5.5 5 6.5 1.2.5 2.6.5 4 .5s2.8 0 4-.5c2.5-1 5-3.5 5-6.5 0-3.5-4-7-9-7z" fill="white"/>
-        <circle cx="15" cy="20" r="1.2" fill="#5BC0EB"/>
-        <circle cx="21" cy="20" r="1.2" fill="#5BC0EB"/>
-        <path d="M15.5 23.5 Q18 25.5 20.5 23.5" stroke="#5BC0EB" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
-      </svg>
-      <span className="logo-text">
-        Zeta<span>Pets</span>
-      </span>
+      <Image
+        src="/logo.png"
+        alt="ZetaPets"
+        width={140}
+        height={44}
+        style={{ objectFit: "contain" }}
+        priority
+      />
     </Link>
   )
 }
