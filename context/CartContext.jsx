@@ -8,16 +8,15 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [toast, setToast] = useState(null)
+  const [lastOrder, setLastOrder] = useState(null)
 
-  // Cargar carrito desde localStorage al iniciar
   useEffect(() => {
     const saved = localStorage.getItem("zetapets-cart")
-    if (saved) {
-      setCart(JSON.parse(saved))
-    }
+    if (saved) setCart(JSON.parse(saved))
+    const savedOrder = localStorage.getItem("zetapets-last-order")
+    if (savedOrder) setLastOrder(JSON.parse(savedOrder))
   }, [])
 
-  // Guardar carrito en localStorage cada vez que cambia
   useEffect(() => {
     localStorage.setItem("zetapets-cart", JSON.stringify(cart))
   }, [cart])
@@ -36,10 +35,7 @@ export function CartProvider({ children }) {
           item.cartKey === key ? { ...item, quantity: item.quantity + 1 } : item
         )
       }
-      return [
-        ...prev,
-        { ...product, cartKey: key, selectedVariant, quantity: 1 },
-      ]
+      return [...prev, { ...product, cartKey: key, selectedVariant, quantity: 1 }]
     })
     showToast(`${product.name} agregado al carrito`)
     setIsCartOpen(true)
@@ -53,9 +49,7 @@ export function CartProvider({ children }) {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.cartKey === cartKey
-            ? { ...item, quantity: item.quantity + delta }
-            : item
+          item.cartKey === cartKey ? { ...item, quantity: item.quantity + delta } : item
         )
         .filter((item) => item.quantity > 0)
     )
@@ -63,6 +57,23 @@ export function CartProvider({ children }) {
 
   function clearCart() {
     setCart([])
+  }
+
+  function placeOrder(userData, paymentMethod) {
+    const orderNumber = "ZP-" + Math.floor(100000 + Math.random() * 900000)
+    const order = {
+      orderNumber,
+      date: new Date().toISOString(),
+      items: cart,
+      total: totalPrice + (totalPrice >= 30000 ? 0 : 2990),
+      userData,
+      paymentMethod,
+      status: 0,
+    }
+    setLastOrder(order)
+    localStorage.setItem("zetapets-last-order", JSON.stringify(order))
+    clearCart()
+    return orderNumber
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
@@ -76,6 +87,8 @@ export function CartProvider({ children }) {
         removeFromCart,
         updateQuantity,
         clearCart,
+        placeOrder,
+        lastOrder,
         totalItems,
         totalPrice,
         isCartOpen,
