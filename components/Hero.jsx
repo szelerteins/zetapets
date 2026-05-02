@@ -7,7 +7,7 @@ export default function Hero() {
       {/* Imagen de fondo */}
       <div className="hero-bg-image">
         <Image
-          src="/hero.jpg"
+          src="/hero2.jpg"
           alt="Mascota feliz con ZetaPets"
           fill
           priority
