@@ -70,30 +70,6 @@ export default function Hero() {
         {/* ── RIGHT ── */}
         <div className="hero-split-right">
 
-          {/* Floating badge — top left */}
-          <div className="hero-badge hero-badge-tl">
-            <span className="hero-badge-dot" />
-            Más vendido
-          </div>
-
-          {/* Floating card — top right */}
-          <div className="hero-badge-card hero-badge-tr">
-            <span className="hero-badge-icon">📦</span>
-            <div>
-              <strong>Correo Argentino</strong>
-              <span>A todo el país</span>
-            </div>
-          </div>
-
-          {/* Floating card — bottom right */}
-          <div className="hero-badge-card hero-badge-br">
-            <span className="hero-badge-icon">🚀</span>
-            <div>
-              <strong>Importado directo</strong>
-              <span>Mejor precio</span>
-            </div>
-          </div>
-
           {/* Product card */}
           <div className={`hero-product-card ${fading ? "hero-card-fade-out" : "hero-card-fade-in"}`}>
             <div className="hero-product-img">
