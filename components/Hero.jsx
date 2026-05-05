@@ -1,57 +1,129 @@
-import Link from "next/link"
+"use client"
+
+import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
+
+const heroProducts = [
+  { src: "/productos/comedero-v2.jpg",     name: "Comedero Automático V2",    price: "$79.990" },
+  { src: "/productos/dispenser-comida.jpg", name: "Dispenser Inteligente",     price: "$52.990" },
+  { src: "/productos/bebedero.jpg",         name: "Bebedero con Filtro",       price: "$24.990" },
+  { src: "/productos/collar-airtag.jpg",    name: "Collar con AirTag",         price: "$12.990" },
+  { src: "/productos/airtag.jpg",           name: "AirTag Apple",              price: "$29.990" },
+]
 
 export default function Hero() {
+  const [current, setCurrent] = useState(0)
+  const [fading, setFading] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFading(true)
+      setTimeout(() => {
+        setCurrent((prev) => (prev + 1) % heroProducts.length)
+        setFading(false)
+      }, 350)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const product = heroProducts[current]
+
   return (
-    <section className="hero-full">
-      {/* Imagen de fondo */}
-      <div className="hero-bg-image">
-        <Image
-          src="/hero2.jpg"
-          alt="Mascota feliz con ZetaPets"
-          fill
-          priority
-          style={{ objectFit: "cover", objectPosition: "center" }}
-          sizes="100vw"
-          quality={90}
-        />
-      </div>
+    <section className="hero-split">
+      <div className="container hero-split-inner">
 
-      {/* Overlay degradado para legibilidad */}
-      <div className="hero-overlay" />
+        {/* ── LEFT ── */}
+        <div className="hero-split-left">
+          <div className="hero-tag">
+            <span className="hero-tag-dot" />
+            Productos importados pensados para tu compañero
+          </div>
 
-      {/* Contenido */}
-      <div className="container hero-full-content">
-        <div className="hero-tag">
-          <span className="hero-tag-dot" />
-          Tienda inteligente para mascotas
+          <h1 className="hero-split-title">
+            Lo mejor para tu<br />
+            <span className="hero-highlight">mascota</span>,<br />
+            sin pagar de <span className="hero-highlight-celeste">más</span>.
+          </h1>
+
+          <p className="hero-split-subtitle">
+            Gadgets, accesorios y productos premium para perros y gatos.
+            Importados directamente, con precios justos y envíos a todo el país por Correo Argentino.
+          </p>
+
+          <div className="hero-ctas">
+            <Link href="/productos" className="btn btn-primary btn-lg">
+              Ver productos →
+            </Link>
+            <Link href="/contacto" className="btn btn-outline btn-lg">
+              Consultar
+            </Link>
+          </div>
+
+          <div className="hero-pills">
+            <span className="hero-pill">🚚 Envío gratis</span>
+            <span className="hero-pill">💸 10% OFF</span>
+            <span className="hero-pill">🔒 Compra protegida</span>
+          </div>
         </div>
 
-        <h1 className="hero-full-title">
-          Tu mascota merece<br />
-          <span className="hero-highlight">lo mejor</span>
-        </h1>
+        {/* ── RIGHT ── */}
+        <div className="hero-split-right">
 
-        <p className="hero-full-subtitle">
-          Alimentación, paseo, higiene y tecnología en un solo lugar.
-          Productos pensados para el bienestar real de tu compañero.
-        </p>
+          {/* Floating badge — top left */}
+          <div className="hero-badge hero-badge-tl">
+            <span className="hero-badge-dot" />
+            Más vendido
+          </div>
 
-        <div className="hero-ctas">
-          <Link href="/productos" className="btn btn-primary btn-lg">
-            Ver productos
-          </Link>
-          <Link href="/categorias" className="btn btn-white btn-lg">
-            Explorar categorías
-          </Link>
+          {/* Floating card — top right */}
+          <div className="hero-badge-card hero-badge-tr">
+            <span className="hero-badge-icon">📦</span>
+            <div>
+              <strong>Correo Argentino</strong>
+              <span>A todo el país</span>
+            </div>
+          </div>
+
+          {/* Floating card — bottom right */}
+          <div className="hero-badge-card hero-badge-br">
+            <span className="hero-badge-icon">🚀</span>
+            <div>
+              <strong>Importado directo</strong>
+              <span>Mejor precio</span>
+            </div>
+          </div>
+
+          {/* Product card */}
+          <div className={`hero-product-card ${fading ? "hero-card-fade-out" : "hero-card-fade-in"}`}>
+            <div className="hero-product-img">
+              <Image
+                src={product.src}
+                alt={product.name}
+                fill
+                style={{ objectFit: "contain" }}
+                sizes="(max-width: 768px) 80vw, 400px"
+                priority
+              />
+            </div>
+            <div className="hero-product-info">
+              <span className="hero-product-name">{product.name}</span>
+              <span className="hero-product-price">{product.price}</span>
+            </div>
+          </div>
+
+          {/* Dots indicator */}
+          <div className="hero-product-dots">
+            {heroProducts.map((_, i) => (
+              <span
+                key={i}
+                className={`hero-product-dot ${i === current ? "active" : ""}`}
+                onClick={() => { setFading(true); setTimeout(() => { setCurrent(i); setFading(false) }, 350) }}
+              />
+            ))}
+          </div>
+
         </div>
-      </div>
-
-      {/* Ola inferior */}
-      <div className="hero-wave">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 60L48 50C96 40 192 20 288 16.7C384 13 480 27 576 33.3C672 40 768 40 864 35C960 30 1056 20 1152 18.3C1248 17 1344 23 1392 26.7L1440 30V60H0Z" fill="#F5FBFA"/>
-        </svg>
       </div>
     </section>
   )
