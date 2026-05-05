@@ -64,6 +64,18 @@ img { max-width: 100%; display: block; }
   font-weight: 800;
   color: var(--text);
   margin-bottom: 8px;
+  position: relative;
+  display: inline-block;
+}
+
+.section-header h2::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  background: var(--verde);
+  border-radius: 4px;
+  margin: 10px auto 0;
 }
 
 .section-header p {
@@ -109,11 +121,12 @@ img { max-width: 100%; display: block; }
 
 .btn-outline {
   background: transparent;
-  color: var(--celeste);
-  border: 2px solid var(--celeste);
+  color: var(--verde-dark);
+  border: 2px solid var(--verde);
 }
 .btn-outline:hover {
-  background: var(--celeste-light);
+  background: var(--verde-light);
+  border-color: var(--verde-dark);
 }
 
 .btn-white {
@@ -464,7 +477,7 @@ img { max-width: 100%; display: block; }
    ===================== */
 .benefits {
   padding: 64px 0;
-  background: var(--white);
+  background: linear-gradient(135deg, #f0faf4 0%, #e8f7fd 100%);
   border-bottom: 1px solid var(--border);
 }
 
@@ -486,11 +499,17 @@ img { max-width: 100%; display: block; }
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: var(--celeste-light);
+  background: var(--verde-light);
+  border: 2px solid var(--verde);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
+}
+
+.benefit-item:nth-child(even) .benefit-icon {
+  background: var(--celeste-light);
+  border-color: var(--celeste);
 }
 
 .benefit-item h3 {
@@ -534,16 +553,21 @@ img { max-width: 100%; display: block; }
 }
 
 .category-card:hover {
-  border-color: var(--celeste);
-  box-shadow: var(--shadow-hover);
+  border-color: var(--verde);
+  box-shadow: 0 8px 30px rgba(122,199,79,0.18);
   transform: translateY(-4px);
+}
+
+.category-card:nth-child(even):hover {
+  border-color: var(--celeste);
+  box-shadow: 0 8px 30px rgba(91,192,235,0.18);
 }
 
 .category-emoji {
   font-size: 2.4rem;
   width: 64px;
   height: 64px;
-  background: var(--celeste-light);
+  background: var(--verde-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -636,7 +660,7 @@ img { max-width: 100%; display: block; }
 .product-category {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--celeste-dark);
+  color: var(--verde-dark);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 6px;
@@ -678,9 +702,9 @@ img { max-width: 100%; display: block; }
 
 .variant-chip:hover,
 .variant-chip.selected {
-  border-color: var(--celeste);
-  color: var(--celeste-dark);
-  background: var(--celeste-light);
+  border-color: var(--verde);
+  color: var(--verde-dark);
+  background: var(--verde-light);
 }
 
 .product-footer {
@@ -726,9 +750,13 @@ img { max-width: 100%; display: block; }
 .why-number {
   font-size: 2.5rem;
   font-weight: 800;
-  color: var(--celeste-light);
+  color: var(--verde);
   margin-bottom: 12px;
   line-height: 1;
+}
+
+.why-item:nth-child(even) .why-number {
+  color: var(--celeste);
 }
 
 .why-item h3 {
@@ -895,7 +923,7 @@ img { max-width: 100%; display: block; }
 }
 
 .footer-col ul li a:hover {
-  color: var(--celeste);
+  color: var(--verde);
 }
 
 .footer-col ul li {
@@ -1160,7 +1188,8 @@ img { max-width: 100%; display: block; }
    PAGES
    ===================== */
 .page-header {
-  background: linear-gradient(135deg, var(--celeste-light), var(--verde-light));
+  background: linear-gradient(135deg, var(--verde-light) 0%, var(--celeste-light) 100%);
+  border-bottom: 4px solid var(--verde);
   padding: 56px 0;
   text-align: center;
 }
@@ -1200,9 +1229,9 @@ img { max-width: 100%; display: block; }
 
 .filter-chip:hover,
 .filter-chip.active {
-  border-color: var(--celeste);
-  color: var(--celeste-dark);
-  background: var(--celeste-light);
+  border-color: var(--verde);
+  color: var(--verde-dark);
+  background: var(--verde-light);
 }
 
 /* Carrito page */
@@ -1446,13 +1475,13 @@ img { max-width: 100%; display: block; }
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--celeste);
+  background: var(--verde);
   border-radius: 2px;
   transition: width 0.25s ease;
 }
 
 .nav-link:hover {
-  color: var(--celeste);
+  color: var(--verde-dark);
 }
 
 .nav-link:hover::after,
@@ -1461,7 +1490,7 @@ img { max-width: 100%; display: block; }
 }
 
 .nav-link.active {
-  color: var(--celeste-dark);
+  color: var(--verde-dark);
   font-weight: 700;
 }
 
@@ -1474,7 +1503,7 @@ img { max-width: 100%; display: block; }
    HERO V2
    ===================== */
 .hero-highlight {
-  color: var(--celeste);
+  color: var(--verde);
   position: relative;
 }
 
@@ -1485,7 +1514,7 @@ img { max-width: 100%; display: block; }
   left: 0;
   right: 0;
   height: 8px;
-  background: rgba(91,192,235,0.2);
+  background: rgba(122,199,79,0.25);
   border-radius: 4px;
   z-index: -1;
 }
@@ -1495,8 +1524,8 @@ img { max-width: 100%; display: block; }
   align-items: center;
   gap: 8px;
   background: var(--white);
-  border: 1.5px solid var(--celeste);
-  color: var(--celeste-dark);
+  border: 1.5px solid var(--verde);
+  color: var(--verde-dark);
   padding: 7px 16px;
   border-radius: var(--radius-full);
   font-size: 0.85rem;
