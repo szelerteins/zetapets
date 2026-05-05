@@ -1,5 +1,6 @@
 import { CartProvider } from "../context/CartContext"
 import Header from "../components/Header"
+import AnnouncementBar from "../components/AnnouncementBar"
 import Footer from "../components/Footer"
 import Toast from "../components/Toast"
 import "../styles/globals.css"
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body>
         <CartProvider>
+          <AnnouncementBar />
           <Header />
           <main>{children}</main>
           <Footer />
