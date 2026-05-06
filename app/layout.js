@@ -4,6 +4,7 @@ import AnnouncementBar from "../components/AnnouncementBar"
 import Footer from "../components/Footer"
 import Toast from "../components/Toast"
 import "../styles/globals.css"
+import "../styles/admin.css"
 
 export const metadata = {
   title: "ZetaPets - Todo para tu mascota",

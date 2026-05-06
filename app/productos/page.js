@@ -1,48 +1,43 @@
-"use client"
+/**
+ * /productos — Catálogo de productos (Server Component)
+ *
+ * Consume datos desde la API interna /api/products en lugar de importar
+ * el array directamente. Esto simula la arquitectura real donde los datos
+ * vendrían de una base de datos a través de la API.
+ *
+ * MIGRACIÓN FUTURA:
+ * - Los datos seguirán viniendo de /api/products
+ * - Solo cambiará lo que está dentro del Route Handler (lib/store → DB con Prisma)
+ */
 
-import { useState } from "react"
-import ProductGrid from "../../components/ProductGrid"
-import { products } from "../../data/products"
-import { categories } from "../../data/categories"
+import ProductosClient from "./ProductosClient"
 
-export default function ProductosPage() {
-  const [activeFilter, setActiveFilter] = useState("Todos")
+export const metadata = {
+  title: "Productos - ZetaPets",
+  description: "Todos los productos para tu mascota",
+}
 
-  const filtered =
-    activeFilter === "Todos"
-      ? products
-      : products.filter((p) => p.category === activeFilter)
+export default async function ProductosPage() {
+  let products = []
+  let categories = []
 
-  const categoryNames = ["Todos", ...categories.map((c) => c.name)]
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const res = await fetch(`${baseUrl}/api/products`, {
+      cache: "no-store",
+    })
+    if (res.ok) {
+      const json = await res.json()
+      products = json.data || []
+      categories = json.categories || []
+    }
+  } catch {
+    // Fallback si la API no responde (ej: en build estático)
+    const { products: local } = await import("../../data/products")
+    const { categories: localCats } = await import("../../data/categories")
+    products = local
+    categories = localCats.map((c) => c.name)
+  }
 
-  return (
-    <>
-      <div className="page-header">
-        <h1>Todos los productos</h1>
-        <p>Encontrá lo mejor para tu mascota</p>
-      </div>
-
-      <section style={{ padding: "0 0 80px" }}>
-        <div className="container">
-          <div className="filter-bar">
-            {categoryNames.map((cat) => (
-              <button
-                key={cat}
-                className={`filter-chip ${activeFilter === cat ? "active" : ""}`}
-                onClick={() => setActiveFilter(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <p style={{ fontSize: "0.87rem", color: "var(--text-light)", marginBottom: "24px" }}>
-            {filtered.length} producto{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
-          </p>
-
-          <ProductGrid products={filtered} />
-        </div>
-      </section>
-    </>
-  )
+  return <ProductosClient products={products} categories={categories} />
 }

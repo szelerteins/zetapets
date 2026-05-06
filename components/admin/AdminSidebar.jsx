@@ -16,9 +16,14 @@ const navItems = [
 export default function AdminSidebar({ onClose, isOpen }) {
   const pathname = usePathname()
 
-  function handleLogout() {
-    localStorage.removeItem("zetapets-admin")
-    window.location.href = "/admin"
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch {
+      // Si falla la llamada, igual redirigir
+    }
+    localStorage.removeItem("zetapets-admin") // limpiar por si quedó algo del sistema viejo
+    window.location.href = "/login"
   }
 
   return (
