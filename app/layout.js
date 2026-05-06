@@ -1,4 +1,5 @@
 import { CartProvider } from "../context/CartContext"
+import { AuthProvider } from "../context/AuthContext"
 import Header from "../components/Header"
 import AnnouncementBar from "../components/AnnouncementBar"
 import Footer from "../components/Footer"
@@ -16,13 +17,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <CartProvider>
-          <AnnouncementBar />
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <Toast />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <AnnouncementBar />
+            <Header />
+            <main>{children}</main>
+            <Footer />
+            <Toast />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   )
