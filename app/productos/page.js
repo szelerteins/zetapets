@@ -11,33 +11,21 @@
  */
 
 import ProductosClient from "./ProductosClient"
+import { getAllProducts, getCategories } from "../../lib/store/products"
 
 export const metadata = {
   title: "Productos - ZetaPets",
   description: "Todos los productos para tu mascota",
 }
 
+/**
+ * Server Component: lee los productos directamente del store en memoria.
+ * Los Server Components pueden importar el store directamente sin HTTP.
+ * La API (/api/products) existe para clientes externos o fetch del lado cliente.
+ * MIGRACIÓN FUTURA: reemplazar getAllProducts() por query a la DB.
+ */
 export default async function ProductosPage() {
-  let products = []
-  let categories = []
-
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    const res = await fetch(`${baseUrl}/api/products`, {
-      cache: "no-store",
-    })
-    if (res.ok) {
-      const json = await res.json()
-      products = json.data || []
-      categories = json.categories || []
-    }
-  } catch {
-    // Fallback si la API no responde (ej: en build estático)
-    const { products: local } = await import("../../data/products")
-    const { categories: localCats } = await import("../../data/categories")
-    products = local
-    categories = localCats.map((c) => c.name)
-  }
-
+  const products = getAllProducts()
+  const categories = getCategories()
   return <ProductosClient products={products} categories={categories} />
 }
