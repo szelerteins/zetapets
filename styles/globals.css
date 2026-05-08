@@ -229,14 +229,14 @@ img { max-width: 100%; display: block; }
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  height: 68px;
+  height: 80px;
 }
 
 .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 68px;
+  height: 80px;
 }
 
 .logo {
@@ -256,71 +256,96 @@ img { max-width: 100%; display: block; }
   font-size: 1.2rem;
 }
 
+/* Link wrapper para el logo animado */
+.logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
 /* ── Logo animado ────────────────────────────────────────────────────────────
-   .logo-wrap es el contenedor relativo sobre el que se posicionan los overlays.
-   El PNG base se renderiza en 176×55 pero la imagen ocupa ~94×55 centrada.
-   Todas las posiciones (left/top) están en % del contenedor 176×55.
-   Ajustar con las variables --dog-eye-left/top y --cat-tail-left/top si
-   los overlays no coinciden exactamente con el ojo o la cola del PNG.
+   JPEG real: 1536×1024px (ratio 3:2). Contenido útil ~66% de la altura.
+   Se muestra a height:80px → width:120px automático → contenido visible ~53px.
+   Posiciones en % del JPEG completo (incluyendo whitespace transparente),
+   que coincide con % del display ya que la imagen no se letterboxea.
+
+   Para ajustar fino si los overlays no coinciden exactamente:
+     --dog-eye-left / --dog-eye-top
+     --cat-tail-left / --cat-tail-top
 */
 
 :root {
-  --dog-eye-left:  22%;   /* eje X del ojo del perro  */
-  --dog-eye-top:   28%;   /* eje Y del ojo del perro  */
-  --cat-tail-left: 41%;   /* eje X de la cola del gato */
-  --cat-tail-top:  62%;   /* eje Y de la cola del gato */
+  --dog-eye-left:  19%;   /* ojo blanco del perro, cabeza superior del Z  */
+  --dog-eye-top:   23%;   /* ojo blanco del perro, cabeza superior del Z  */
+  --cat-tail-left: 26%;   /* base de la cola blanca del gato              */
+  --cat-tail-top:  61%;   /* base de la cola blanca del gato              */
 }
 
+/* Contenedor relativo — se ajusta exactamente al tamaño de la imagen */
 .logo-wrap {
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
   line-height: 0;
+  flex-shrink: 0;
 }
 
-/* Párpado del perro — normalmente invisible */
+/* Imagen del logo: height fijo, width automático según ratio real 3:2 */
+.logo-img {
+  height: 80px !important;
+  width: auto !important;
+  display: block !important;
+}
+
+/* ── Párpado del perro ───────────────────────────────────────────────────────
+   Cubre el ojo blanco del perro con un arco del mismo verde (#5ec824).
+   Normalmente invisible (opacity:0). Al activarse hace scaleY 0→1→0.
+*/
 .logo-dog-eye {
-  position: absolute;
-  left:   var(--dog-eye-left);
-  top:    var(--dog-eye-top);
-  transform: translate(-50%, -50%);
-  width:  7px;
-  height: 2px;
-  background: var(--verde-dark, #1a7a3c);
-  border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
-  opacity: 0;
-  transition: opacity 60ms ease;
+  position:      absolute;
+  left:          var(--dog-eye-left);
+  top:           var(--dog-eye-top);
+  transform:     translate(-50%, -50%) scaleY(0);
+  width:         7px;
+  height:        3px;
+  background:    #5ec824;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  opacity:       0;
   pointer-events: none;
 }
 
-/* Guiño activo: parece un ojo cerrado */
+/* Estado activo: guiño en 300ms */
 .logo-dog-eye--wink {
-  opacity: 1;
-  animation: dogWink 280ms ease forwards;
+  animation: dogWink 300ms ease forwards;
 }
 
 @keyframes dogWink {
   0%   { transform: translate(-50%, -50%) scaleY(0); opacity: 0; }
-  20%  { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
-  75%  { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
+  15%  { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
+  70%  { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
   100% { transform: translate(-50%, -50%) scaleY(0); opacity: 0; }
 }
 
-/* Cola del gato — arco SVG oscilante continuo */
+/* ── Cola del gato ───────────────────────────────────────────────────────────
+   SVG blanco que oscila sobre la cola del gato.
+   transform-origin en el extremo inferior = base de la cola.
+*/
 .logo-cat-tail {
-  position: absolute;
+  position:        absolute;
   left:            var(--cat-tail-left);
   top:             var(--cat-tail-top);
-  transform-origin: 50% 100%;   /* pivote en la base de la cola */
+  width:           10px;
+  height:          16px;
+  transform-origin: 50% 100%;
   animation:       catTailWag 1.8s ease-in-out infinite;
   pointer-events:  none;
   overflow:        visible;
 }
 
 @keyframes catTailWag {
-  0%   { transform: rotate(-10deg); }
-  50%  { transform: rotate(12deg);  }
-  100% { transform: rotate(-10deg); }
+  0%   { transform: rotate(-12deg); }
+  50%  { transform: rotate(14deg);  }
+  100% { transform: rotate(-12deg); }
 }
 
 .nav {
