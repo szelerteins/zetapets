@@ -256,6 +256,73 @@ img { max-width: 100%; display: block; }
   font-size: 1.2rem;
 }
 
+/* ── Logo animado ────────────────────────────────────────────────────────────
+   .logo-wrap es el contenedor relativo sobre el que se posicionan los overlays.
+   El PNG base se renderiza en 176×55 pero la imagen ocupa ~94×55 centrada.
+   Todas las posiciones (left/top) están en % del contenedor 176×55.
+   Ajustar con las variables --dog-eye-left/top y --cat-tail-left/top si
+   los overlays no coinciden exactamente con el ojo o la cola del PNG.
+*/
+
+:root {
+  --dog-eye-left:  22%;   /* eje X del ojo del perro  */
+  --dog-eye-top:   28%;   /* eje Y del ojo del perro  */
+  --cat-tail-left: 41%;   /* eje X de la cola del gato */
+  --cat-tail-top:  62%;   /* eje Y de la cola del gato */
+}
+
+.logo-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+/* Párpado del perro — normalmente invisible */
+.logo-dog-eye {
+  position: absolute;
+  left:   var(--dog-eye-left);
+  top:    var(--dog-eye-top);
+  transform: translate(-50%, -50%);
+  width:  7px;
+  height: 2px;
+  background: var(--verde-dark, #1a7a3c);
+  border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+  opacity: 0;
+  transition: opacity 60ms ease;
+  pointer-events: none;
+}
+
+/* Guiño activo: parece un ojo cerrado */
+.logo-dog-eye--wink {
+  opacity: 1;
+  animation: dogWink 280ms ease forwards;
+}
+
+@keyframes dogWink {
+  0%   { transform: translate(-50%, -50%) scaleY(0); opacity: 0; }
+  20%  { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
+  75%  { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scaleY(0); opacity: 0; }
+}
+
+/* Cola del gato — arco SVG oscilante continuo */
+.logo-cat-tail {
+  position: absolute;
+  left:            var(--cat-tail-left);
+  top:             var(--cat-tail-top);
+  transform-origin: 50% 100%;   /* pivote en la base de la cola */
+  animation:       catTailWag 1.8s ease-in-out infinite;
+  pointer-events:  none;
+  overflow:        visible;
+}
+
+@keyframes catTailWag {
+  0%   { transform: rotate(-10deg); }
+  50%  { transform: rotate(12deg);  }
+  100% { transform: rotate(-10deg); }
+}
+
 .nav {
   display: flex;
   align-items: center;
