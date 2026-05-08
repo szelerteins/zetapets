@@ -4,6 +4,7 @@ import Header from "../components/Header"
 import AnnouncementBar from "../components/AnnouncementBar"
 import Footer from "../components/Footer"
 import Toast from "../components/Toast"
+import WhatsAppButton from "../components/WhatsAppButton"
 import "../styles/globals.css"
 import "../styles/admin.css"
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }) {
             <main>{children}</main>
             <Footer />
             <Toast />
+            <WhatsAppButton />
           </CartProvider>
         </AuthProvider>
       </body>

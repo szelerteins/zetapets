@@ -2641,3 +2641,71 @@ img { max-width: 100%; display: block; }
   .checkout-layout { grid-template-columns: 1fr; }
   .checkout-aside { position: static; }
 }
+
+/* ── Botón flotante de WhatsApp ─────────────────────────────────────────── */
+.wa-float {
+  position:        fixed;
+  bottom:          28px;
+  right:           28px;
+  z-index:         999;
+  width:           58px;
+  height:          58px;
+  background:      #25D366;
+  color:           #fff;
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  box-shadow:      0 4px 20px rgba(37,211,102,0.45);
+  text-decoration: none;
+  transition:      transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wa-float:hover {
+  transform:  scale(1.1);
+  box-shadow: 0 6px 28px rgba(37,211,102,0.60);
+}
+
+/* Tooltip al hacer hover */
+.wa-float-tooltip {
+  position:       absolute;
+  right:          68px;
+  background:     #1a1a1a;
+  color:          #fff;
+  font-size:      0.78rem;
+  font-weight:    600;
+  white-space:    nowrap;
+  padding:        6px 12px;
+  border-radius:  8px;
+  pointer-events: none;
+  opacity:        0;
+  transform:      translateX(6px);
+  transition:     opacity 0.2s ease, transform 0.2s ease;
+}
+
+.wa-float-tooltip::after {
+  content:       '';
+  position:      absolute;
+  top:           50%;
+  right:         -6px;
+  transform:     translateY(-50%);
+  border:        6px solid transparent;
+  border-left-color: #1a1a1a;
+  border-right:  none;
+}
+
+.wa-float:hover .wa-float-tooltip {
+  opacity:   1;
+  transform: translateX(0);
+}
+
+/* En mobile: botón un poco más pequeño y más cerca del borde */
+@media (max-width: 640px) {
+  .wa-float {
+    width:  52px;
+    height: 52px;
+    bottom: 20px;
+    right:  16px;
+  }
+  .wa-float-tooltip { display: none; }
+}
