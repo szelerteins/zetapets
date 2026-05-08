@@ -1,12 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import CartDrawer from "./CartDrawer"
+import LogoAnimated from "./LogoAnimated"
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -14,21 +14,6 @@ const navLinks = [
   { href: "/categorias", label: "Categorías" },
   { href: "/contacto", label: "Contacto" },
 ]
-
-function Logo() {
-  return (
-    <Link href="/" className="logo" aria-label="ZetaPets - Inicio">
-      <Image
-        src="/logo.png"
-        alt="ZetaPets"
-        width={140}
-        height={44}
-        style={{ objectFit: "contain" }}
-        priority
-      />
-    </Link>
-  )
-}
 
 function UserMenu({ user, onLogout }) {
   const [open, setOpen] = useState(false)
@@ -105,7 +90,7 @@ export default function Header() {
       <header className={`header ${scrolled ? "header-scrolled" : ""}`}>
         <div className="container">
           <div className="header-inner">
-            <Logo />
+            <LogoAnimated />
 
             <nav className="nav" role="navigation" aria-label="Navegación principal">
               {navLinks.map((link) => (
