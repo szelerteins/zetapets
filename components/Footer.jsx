@@ -41,9 +41,11 @@ export default function Footer() {
           <div className="footer-col">
             <h4>Contacto</h4>
             <ul>
-              <li>hola@zetapets.com</li>
-              <li>+54 9 11 1234-5678</li>
+              <li>zetapets.ar@gmail.com</li>
+              <li>+5491131451107</li>
               <li>Buenos Aires, Argentina</li>
+              <li><a href="https://instagram.com/zetapets.ar" target="_blank" rel="noopener noreferrer">Instagram: @zetapets.ar</a></li>
+              <li><a href="https://tiktok.com/@zetapets2" target="_blank" rel="noopener noreferrer">TikTok: @zetapets2</a></li>
             </ul>
           </div>
         </div>
