@@ -81,7 +81,7 @@ function Step1({ data, onChange, onNext }) {
         {field("apellido", "Apellido *", "text", "García")}
       </div>
       {field("email", "Email *", "email", "juan@email.com")}
-      {field("telefono", "Teléfono *", "tel", "+54 9 11 1234-5678")}
+      {field("telefono", "Teléfono *", "tel", "+54 9 11 XXXX-XXXX")}
       {field("direccion", "Dirección *", "text", "Av. Corrientes 1234, CABA")}
       {field("codigoPostal", "Código postal *", "text", "C1043")}
 

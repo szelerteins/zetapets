@@ -34,26 +34,6 @@ const benefits = [
   { iconKey: "heart",  title: "Para perros y gatos",    desc: "Diseñado para su bienestar diario" },
 ]
 
-const testimonials = [
-  {
-    text: "El comedero inteligente cambió nuestra rutina. Puedo programar las comidas de Rocky aunque llegue tarde del trabajo.",
-    author: "María G.",
-    pet: "Dueña de Rocky (Golden Retriever)",
-    avatar: "M",
-  },
-  {
-    text: "La cama ortopédica fue lo mejor que le compré a mi perro senior. Descansa mejor y tiene más energía.",
-    author: "Carlos R.",
-    pet: "Dueño de Max (Labrador, 10 años)",
-    avatar: "C",
-  },
-  {
-    text: "Pedí un collar y llegó al día siguiente. La calidad es excelente y mi gata lo usa cómoda en los paseos.",
-    author: "Laura P.",
-    pet: "Dueña de Misi (Gata Siamés)",
-    avatar: "L",
-  },
-]
 
 export default function HomePage() {
   const featured = products.slice(0, 6)
@@ -113,30 +93,6 @@ export default function HomePage() {
                 <div className="why-number">{w.n}</div>
                 <h3>{w.title}</h3>
                 <p>{w.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonios */}
-      <section className="testimonials-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Lo que dicen nuestros clientes</h2>
-          </div>
-          <div className="testimonials-grid">
-            {testimonials.map((t) => (
-              <div key={t.author} className="testimonial-card">
-                <div className="testimonial-stars">★★★★★</div>
-                <p className="testimonial-text">"{t.text}"</p>
-                <div className="testimonial-author">
-                  <div className="author-avatar">{t.avatar}</div>
-                  <div>
-                    <p className="author-name">{t.author}</p>
-                    <p className="author-pet">{t.pet}</p>
-                  </div>
-                </div>
               </div>
             ))}
           </div>
