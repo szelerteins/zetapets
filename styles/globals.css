@@ -834,6 +834,73 @@ img { max-width: 100%; display: block; }
   color: var(--text-light);
 }
 
+/* Photo-style category cards */
+.category-card-photo {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
+  padding: 0;
+  background: #111;
+  display: block;
+  align-items: unset;
+  gap: unset;
+  flex-direction: unset;
+  border: none;
+}
+
+.category-card-photo:hover,
+.category-card-photo:nth-child(even):hover {
+  border: none;
+}
+
+.category-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.06) 100%);
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.category-card-photo:hover .category-card-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.12) 100%);
+}
+
+.category-card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  z-index: 2;
+}
+
+.category-card-photo h3 {
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.category-card-photo p {
+  color: rgba(255,255,255,0.72);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.category-card-photo:hover {
+  border-color: transparent;
+  box-shadow: 0 10px 34px rgba(0,0,0,0.22);
+  transform: translateY(-4px);
+}
+
+/* SVG icons in benefit circles */
+.benefit-icon svg {
+  color: var(--verde-dark);
+}
+.benefit-item:nth-child(even) .benefit-icon svg {
+  color: var(--celeste-dark);
+}
+
 /* =====================
    PRODUCTS
    ===================== */

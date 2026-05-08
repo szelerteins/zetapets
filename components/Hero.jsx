@@ -47,8 +47,8 @@ export default function Hero() {
           </h1>
 
           <p className="hero-split-subtitle">
-            Gadgets, accesorios y productos premium para perros y gatos.
-            Importados directamente, con precios justos y envíos a todo el país por Correo Argentino.
+            Gadgets y accesorios premium importados para perros y gatos.
+            Precios justos, envíos a todo el país.
           </p>
 
           <div className="hero-ctas">
@@ -61,9 +61,9 @@ export default function Hero() {
           </div>
 
           <div className="hero-pills">
-            <span className="hero-pill">🚚 Envío gratis</span>
-            <span className="hero-pill">💸 10% OFF</span>
-            <span className="hero-pill">🔒 Compra protegida</span>
+            <span className="hero-pill">Envío gratis desde $60.000</span>
+            <span className="hero-pill">10% OFF primera compra</span>
+            <span className="hero-pill">Compra protegida</span>
           </div>
         </div>
 
