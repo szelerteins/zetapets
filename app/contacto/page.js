@@ -4,15 +4,39 @@ import { useState } from "react"
 
 export default function ContactoPage() {
   const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const [form, setForm] = useState({ nombre: "", email: "", asunto: "", mensaje: "" })
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    if (error) setError("")
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSent(true)
+    setLoading(true)
+    setError("")
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Hubo un error al enviar el mensaje.")
+      } else {
+        setSent(true)
+      }
+    } catch {
+      setError("No se pudo conectar. Revisá tu conexión e intentá de nuevo.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -222,8 +246,18 @@ export default function ContactoPage() {
                     onChange={handleChange}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-                  Enviar mensaje →
+                {error && (
+                  <p style={{ color: "#ef4444", fontSize: "0.88rem", marginBottom: "8px", fontWeight: 500 }}>
+                    ⚠️ {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ width: "100%", justifyContent: "center", opacity: loading ? 0.7 : 1 }}
+                  disabled={loading}
+                >
+                  {loading ? "Enviando..." : "Enviar mensaje →"}
                 </button>
               </form>
             )}
