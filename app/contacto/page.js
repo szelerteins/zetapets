@@ -69,7 +69,7 @@ export default function ContactoPage() {
 
               {/* WhatsApp button */}
               <a
-                href="https://wa.me/5491131451107"
+                href={`https://wa.me/5491131451107?text=${encodeURIComponent("Hola,como estas? Quisiera hacer una consulta")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
