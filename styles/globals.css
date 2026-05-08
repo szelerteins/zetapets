@@ -985,6 +985,40 @@ img { max-width: 100%; display: block; }
   transform: translateY(-4px);
 }
 
+/* Categoría activa/seleccionada — borde de color SIN tapar la foto */
+.category-card-active {
+  box-shadow: 0 0 0 3px var(--celeste), 0 12px 36px rgba(91,192,235,0.35) !important;
+  transform: translateY(-4px);
+}
+
+.category-card-active .category-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.80) 0%,
+    rgba(91,192,235,0.22) 60%,
+    rgba(91,192,235,0.08) 100%
+  );
+}
+
+/* Check badge esquina superior derecha de la categoría activa */
+.category-card-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  background: var(--celeste);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 /* SVG icons in benefit circles */
 .benefit-icon svg {
   color: var(--verde-dark);
