@@ -1,66 +1,65 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import AdminLayout from "../../../components/admin/AdminLayout"
 import MetricCard from "../../../components/admin/MetricCard"
-import { SalesLineChart, RevenueBarChart, TopProductsChart, OrderStatusChart } from "../../../components/admin/SalesChart"
-import { metrics } from "../../../data/adminData"
+import { SalesLineChart, OrderStatusChart } from "../../../components/admin/SalesChart"
 
 function formatPrice(n) {
-  return "$" + n.toLocaleString("es-AR")
+  return "$" + Math.round(n).toLocaleString("es-AR")
+}
+
+const statusLabels = {
+  pending: "Pendiente",
+  confirmed: "Confirmado",
+  shipped: "Enviado",
+  delivered: "Entregado",
+  cancelled: "Cancelado",
 }
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then(r => r.json())
+      .then(data => { setStats(data); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <AdminLayout title="Dashboard">
+      <div style={{ textAlign: "center", padding: "60px 0", color: "#6B7280" }}>
+        Cargando datos reales...
+      </div>
+    </AdminLayout>
+  )
+
   return (
     <AdminLayout title="Dashboard">
-      {/* Métricas */}
       <div className="metrics-grid">
-        <MetricCard
-          icon="💰" label="Facturación total" color="verde"
-          value={formatPrice(metrics.totalRevenue)} trend={12.4}
-          sub="Este mes"
-        />
-        <MetricCard
-          icon="🛒" label="Ventas totales" color="celeste"
-          value={metrics.totalSales.toLocaleString()} trend={8.1}
-          sub="Unidades vendidas"
-        />
-        <MetricCard
-          icon="📋" label="Pedidos" color="purple"
-          value={metrics.totalOrders} trend={5.3}
-          sub="Pedidos confirmados"
-        />
-        <MetricCard
-          icon="🎯" label="Ticket promedio" color="orange"
-          value={formatPrice(metrics.avgTicket)} trend={3.2}
-          sub="Por compra"
-        />
-        <MetricCard
-          icon="🛍️" label="Carritos abandonados" color="red"
-          value={metrics.abandonedCarts} trend={-4.1}
-          sub="Último mes"
-        />
-        <MetricCard
-          icon="👥" label="Clientes" color="verde"
-          value={metrics.registeredClients} trend={15.7}
-          sub="Registrados"
-        />
-        <MetricCard
-          icon="📈" label="Tasa de conversión" color="celeste"
-          value={`${metrics.conversionRate}%`} trend={0.8}
-          sub="Visitas → compras"
-        />
-        <MetricCard
-          icon="🏆" label="Producto estrella" color="purple"
-          value="V2" sub={metrics.topProduct}
-        />
+        <MetricCard icon="💰" label="Facturación total" color="verde"
+          value={stats ? formatPrice(stats.totalRevenue) : "—"} sub="Pedidos activos" />
+        <MetricCard icon="📋" label="Pedidos totales" color="purple"
+          value={stats?.totalOrders ?? "—"} sub="Todos los estados" />
+        <MetricCard icon="🎯" label="Ticket promedio" color="orange"
+          value={stats ? formatPrice(stats.avgTicket) : "—"} sub="Por compra" />
+        <MetricCard icon="👥" label="Clientes registrados" color="celeste"
+          value={stats?.registeredClients ?? "—"} sub="Con perfil creado" />
+        <MetricCard icon="⏳" label="Pendientes" color="orange"
+          value={stats?.statusCounts?.pending ?? "—"} sub="Esperando confirmación" />
+        <MetricCard icon="🚚" label="Enviados" color="celeste"
+          value={stats?.statusCounts?.shipped ?? "—"} sub="En camino" />
+        <MetricCard icon="✅" label="Entregados" color="verde"
+          value={stats?.statusCounts?.delivered ?? "—"} sub="Completados" />
+        <MetricCard icon="🏆" label="Producto más vendido" color="purple"
+          value="" sub={stats?.topProduct ?? "—"} />
       </div>
 
-      {/* Gráficos */}
       <div className="charts-grid">
-        <SalesLineChart />
-        <RevenueBarChart />
-        <TopProductsChart />
-        <OrderStatusChart />
+        <SalesLineChart data={stats?.salesByDay} />
+        <OrderStatusChart data={stats?.statusCounts} />
       </div>
     </AdminLayout>
   )

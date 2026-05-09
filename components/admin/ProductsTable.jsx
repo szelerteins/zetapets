@@ -1,29 +1,34 @@
 "use client"
 
-import { useState } from "react"
-import { products } from "../../data/products"
+import { useState, useEffect } from "react"
 
 function formatPrice(n) {
-  return "$" + n.toLocaleString("es-AR")
-}
-
-// Stock simulado por producto
-const simulatedStock = {
-  1: 24, 2: 8, 3: 15, 4: 31, 5: 6,
-  6: 19, 7: 42, 8: 28, 9: 13, 10: 55,
-  11: 38, 12: 11, 13: 7, 14: 16,
+  return "$" + Math.round(n).toLocaleString("es-AR")
 }
 
 export default function ProductsTable() {
-  const [productStates, setProductStates] = useState(
-    Object.fromEntries(products.map((p) => [p.id, "Activo"]))
-  )
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [toggling, setToggling] = useState(null)
 
-  function toggleState(id) {
-    setProductStates((prev) => ({
-      ...prev,
-      [id]: prev[id] === "Activo" ? "Pausado" : "Activo",
-    }))
+  function loadProducts() {
+    fetch("/api/admin/products")
+      .then(r => r.json())
+      .then(data => { setProducts(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }
+
+  useEffect(() => { loadProducts() }, [])
+
+  async function toggleActive(id, currentValue) {
+    setToggling(id)
+    await fetch("/api/admin/products", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_active: !currentValue }),
+    })
+    loadProducts()
+    setToggling(null)
   }
 
   return (
@@ -33,24 +38,24 @@ export default function ProductsTable() {
         <span className="admin-table-count">{products.length} productos</span>
       </div>
 
-      <div className="admin-table-scroll">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Categoría</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => {
-              const stock = simulatedStock[p.id] || 0
-              const estado = productStates[p.id]
-              return (
-                <tr key={p.id} className={estado === "Pausado" ? "row-paused" : ""}>
+      {loading ? (
+        <div style={{ padding: "40px", textAlign: "center", color: "#6B7280" }}>Cargando productos...</div>
+      ) : (
+        <div className="admin-table-scroll">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p.id} className={!p.is_active ? "row-paused" : ""}>
                   <td>
                     <div className="product-cell">
                       <span className="product-emoji-sm">{p.emoji}</span>
@@ -63,42 +68,33 @@ export default function ProductsTable() {
                   <td>{p.category}</td>
                   <td><strong>{formatPrice(p.price)}</strong></td>
                   <td>
-                    <span className={`stock-badge ${stock <= 10 ? "stock-low" : "stock-ok"}`}>
-                      {stock} u.
+                    <span className={`stock-badge ${(p.stock || 0) <= 10 ? "stock-low" : "stock-ok"}`}>
+                      {p.stock ?? 0} u.
                     </span>
                   </td>
                   <td>
-                    <span className={`admin-badge ${estado === "Activo" ? "badge-green" : "badge-yellow"}`}>
-                      {estado}
+                    <span className={`admin-badge ${p.is_active ? "badge-green" : "badge-yellow"}`}>
+                      {p.is_active ? "Activo" : "Pausado"}
                     </span>
                   </td>
                   <td>
                     <div className="action-btns">
                       <button
-                        className="action-btn edit"
-                        title="Editar"
-                        onClick={() => alert("Próximamente: editar producto")}
-                      >✏️</button>
-                      <button
                         className="action-btn pause"
-                        title={estado === "Activo" ? "Pausar" : "Activar"}
-                        onClick={() => toggleState(p.id)}
+                        title={p.is_active ? "Pausar" : "Activar"}
+                        disabled={toggling === p.id}
+                        onClick={() => toggleActive(p.id, p.is_active)}
                       >
-                        {estado === "Activo" ? "⏸️" : "▶️"}
+                        {p.is_active ? "⏸️" : "▶️"}
                       </button>
-                      <button
-                        className="action-btn delete"
-                        title="Eliminar"
-                        onClick={() => alert("Próximamente: eliminar producto")}
-                      >🗑️</button>
                     </div>
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

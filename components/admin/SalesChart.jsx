@@ -10,12 +10,15 @@ function fmt(n) {
   return "$" + (n / 1000).toFixed(0) + "K"
 }
 
-export function SalesLineChart() {
+// SalesLineChart accepts an optional `data` prop (array of {day, ventas, facturacion}).
+// Falls back to static adminData if no prop is provided.
+export function SalesLineChart({ data }) {
+  const chartData = data ?? salesByDay
   return (
     <div className="admin-chart-card">
       <h3 className="admin-chart-title">Ventas por día (últimos 14 días)</h3>
       <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={salesByDay} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+        <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="day" tick={{ fontSize: 11 }} interval={1} />
           <YAxis tick={{ fontSize: 11 }} />
@@ -63,25 +66,54 @@ export function TopProductsChart() {
   )
 }
 
-const COLORS = ordersByStatus.map((o) => o.color)
+// OrderStatusChart accepts an optional `data` prop (object with keys:
+// pending, confirmed, shipped, delivered, cancelled).
+// Falls back to static adminData if no prop is provided.
+const STATUS_LABELS = {
+  pending: "Pendiente",
+  confirmed: "Confirmado",
+  shipped: "Enviado",
+  delivered: "Entregado",
+  cancelled: "Cancelado",
+}
+const STATUS_COLORS = {
+  pending: "#FBBF24",
+  confirmed: "#60A5FA",
+  shipped: "#818CF8",
+  delivered: "#34D399",
+  cancelled: "#F87171",
+}
 
-export function OrderStatusChart() {
+export function OrderStatusChart({ data }) {
+  // If real data prop is provided, convert statusCounts object → pie array
+  const chartData = data
+    ? Object.entries(data)
+        .filter(([, count]) => count > 0)
+        .map(([key, count]) => ({
+          status: STATUS_LABELS[key] || key,
+          cantidad: count,
+          color: STATUS_COLORS[key] || "#9CA3AF",
+        }))
+    : ordersByStatus
+
+  const colors = chartData.map(o => o.color)
+
   return (
     <div className="admin-chart-card">
       <h3 className="admin-chart-title">Estado de pedidos</h3>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie
-            data={ordersByStatus}
+            data={chartData}
             dataKey="cantidad"
             nameKey="status"
             cx="50%"
             cy="50%"
             outerRadius={80}
-            label={({ status, porcentaje }) => status}
+            label={({ status }) => status}
           >
-            {ordersByStatus.map((entry, i) => (
-              <Cell key={i} fill={COLORS[i]} />
+            {chartData.map((entry, i) => (
+              <Cell key={i} fill={colors[i]} />
             ))}
           </Pie>
           <Tooltip formatter={(v, n) => [v + " pedidos", n]} />

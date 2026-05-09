@@ -1,39 +1,38 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import AdminLayout from "../../../../components/admin/AdminLayout"
 import OrdersTable from "../../../../components/admin/OrdersTable"
-import { SalesLineChart, RevenueBarChart } from "../../../../components/admin/SalesChart"
-import { metrics } from "../../../../data/adminData"
 
-function fmt(n) { return "$" + n.toLocaleString("es-AR") }
+function fmt(n) { return "$" + Math.round(n).toLocaleString("es-AR") }
 
 export default function VentasPage() {
+  const [stats, setStats] = useState(null)
+
+  useEffect(() => {
+    fetch("/api/admin/stats").then(r => r.json()).then(setStats).catch(() => {})
+  }, [])
+
   return (
     <AdminLayout title="Ventas y Pedidos">
       <div className="metrics-grid metrics-grid--sm">
         <div className="billing-card">
           <p className="billing-card-label">Total vendido</p>
-          <p className="billing-card-value">{fmt(metrics.totalRevenue)}</p>
+          <p className="billing-card-value">{stats ? fmt(stats.totalRevenue) : "—"}</p>
         </div>
         <div className="billing-card">
           <p className="billing-card-label">Pedidos totales</p>
-          <p className="billing-card-value">{metrics.totalOrders}</p>
+          <p className="billing-card-value">{stats?.totalOrders ?? "—"}</p>
         </div>
         <div className="billing-card">
           <p className="billing-card-label">Ticket promedio</p>
-          <p className="billing-card-value">{fmt(metrics.avgTicket)}</p>
+          <p className="billing-card-value">{stats ? fmt(stats.avgTicket) : "—"}</p>
         </div>
         <div className="billing-card">
-          <p className="billing-card-label">Conversión</p>
-          <p className="billing-card-value">{metrics.conversionRate}%</p>
+          <p className="billing-card-label">Pendientes</p>
+          <p className="billing-card-value">{stats?.statusCounts?.pending ?? "—"}</p>
         </div>
       </div>
-
-      <div className="charts-grid charts-grid--2">
-        <SalesLineChart />
-        <RevenueBarChart />
-      </div>
-
       <OrdersTable />
     </AdminLayout>
   )
