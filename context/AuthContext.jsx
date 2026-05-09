@@ -8,19 +8,20 @@ const AuthContext = createContext()
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   // Cliente lazy: solo se crea cuando Supabase está configurado
   const getClient = useCallback(() => createClient(), [])
 
   const loadProfile = useCallback(async (supabase, userId) => {
-    if (!supabase || !userId) { setProfile(null); return }
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single()
-    setProfile(data ?? null)
+    if (!supabase || !userId) { setProfile(null); setIsAdmin(false); return }
+    const [{ data: profileData }, { data: adminData }] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", userId).single(),
+      supabase.from("admin_users").select("user_id").eq("user_id", userId).single(),
+    ])
+    setProfile(profileData ?? null)
+    setIsAdmin(!!adminData)
   }, [])
 
   useEffect(() => {
@@ -84,6 +85,7 @@ export function AuthProvider({ children }) {
     if (supabase) await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+    setIsAdmin(false)
   }
 
   async function refreshProfile() {
@@ -101,7 +103,7 @@ export function AuthProvider({ children }) {
     : null
 
   return (
-    <AuthContext.Provider value={{ user: userForHeader, rawUser: user, profile, loading, login, register, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user: userForHeader, rawUser: user, profile, isAdmin, loading, login, register, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )

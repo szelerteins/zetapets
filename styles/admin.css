@@ -1059,6 +1059,9 @@
 .user-dropdown-logout { color: #dc2626; }
 .user-dropdown-logout:hover { background: #fef2f2; }
 
+.user-dropdown-admin { color: #d97706; font-weight: 700; }
+.user-dropdown-admin:hover { background: #fffbeb; color: #b45309; }
+
 /* =====================
    ADMIN RESPONSIVE
    ===================== */

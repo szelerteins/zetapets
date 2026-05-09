@@ -15,7 +15,7 @@ const navLinks = [
   { href: "/contacto", label: "Contacto" },
 ]
 
-function UserMenu({ user, onLogout }) {
+function UserMenu({ user, isAdmin, onLogout }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -50,6 +50,12 @@ function UserMenu({ user, onLogout }) {
             <span>{user.email}</span>
           </div>
           <hr className="user-dropdown-divider" />
+          {isAdmin && (
+            <Link href="/admin/dashboard" className="user-dropdown-item user-dropdown-admin" onClick={() => setOpen(false)}>
+              🛡️ Panel de administrador
+            </Link>
+          )}
+          {isAdmin && <hr className="user-dropdown-divider" />}
           <Link href="/account" className="user-dropdown-item" onClick={() => setOpen(false)}>
             👤 Mi cuenta
           </Link>
@@ -72,7 +78,7 @@ export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const { totalItems, isCartOpen, setIsCartOpen } = useCart()
-  const { user, loading, logout } = useAuth()
+  const { user, isAdmin, loading, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -127,7 +133,7 @@ export default function Header() {
               {!loading && (
                 <div className="header-auth">
                   {user ? (
-                    <UserMenu user={user} onLogout={handleLogout} />
+                    <UserMenu user={user} isAdmin={isAdmin} onLogout={handleLogout} />
                   ) : (
                     <>
                       <Link href="/login" className="btn btn-outline btn-sm">
@@ -174,6 +180,15 @@ export default function Header() {
               <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", padding: "4px 0" }}>
                 Hola, {user.nombre} 👋
               </span>
+              {isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: "6px", color: "#fbbf24", fontWeight: 700, fontSize: "0.95rem", padding: "4px 0", textDecoration: "none" }}
+                >
+                  🛡️ Panel de administrador
+                </Link>
+              )}
               <button
                 onClick={() => { setMenuOpen(false); handleLogout() }}
                 style={{ textAlign: "left", color: "#ef4444", fontWeight: 600, fontSize: "0.95rem", background: "none", border: "none", cursor: "pointer", padding: "4px 0", fontFamily: "inherit" }}
