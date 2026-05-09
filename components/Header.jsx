@@ -50,7 +50,10 @@ function UserMenu({ user, onLogout }) {
             <span>{user.email}</span>
           </div>
           <hr className="user-dropdown-divider" />
-          <Link href="/mis-pedidos" className="user-dropdown-item" onClick={() => setOpen(false)}>
+          <Link href="/account" className="user-dropdown-item" onClick={() => setOpen(false)}>
+            👤 Mi cuenta
+          </Link>
+          <Link href="/orders" className="user-dropdown-item" onClick={() => setOpen(false)}>
             📦 Mis pedidos
           </Link>
           <button

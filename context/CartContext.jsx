@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
+import { createClient } from "../lib/supabase/client"
 
 const CartContext = createContext()
 
@@ -59,13 +60,61 @@ export function CartProvider({ children }) {
     setCart([])
   }
 
-  function placeOrder(userData, paymentMethod) {
+  /**
+   * Guarda la orden en Supabase Y en localStorage como fallback.
+   * Devuelve { ok, orderNumber, error? }
+   */
+  async function placeOrder(userData, paymentMethod) {
+    const supabase = createClient()
+    const shipping = totalPrice >= 30000 ? 0 : 2990
     const orderNumber = "ZP-" + Math.floor(100000 + Math.random() * 900000)
+
+    // Intentar guardar en Supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id:              user?.id ?? null,
+          order_number:         orderNumber,
+          status:               "pending",
+          subtotal:             totalPrice,
+          tax:                  0,
+          total:                totalPrice + shipping,
+          payment_method:       paymentMethod,
+          shipping_name:        `${userData.nombre} ${userData.apellido}`,
+          shipping_address:     userData.direccion,
+          shipping_phone:       userData.telefono,
+          shipping_postal_code: userData.codigoPostal,
+          shipping_email:       userData.email,
+        })
+        .select()
+        .single()
+
+      if (!orderError && order) {
+        const items = cart.map((item) => ({
+          order_id:      order.id,
+          product_name:  item.name,
+          product_emoji: item.emoji ?? null,
+          quantity:      item.quantity,
+          unit_price:    item.price,
+          total_price:   item.price * item.quantity,
+          variant:       item.selectedVariant ?? null,
+        }))
+        await supabase.from("order_items").insert(items)
+      }
+    } catch (e) {
+      // Si Supabase falla (ej: vars no configuradas), continúa con localStorage
+      console.warn("Supabase no disponible, guardando orden solo en localStorage:", e.message)
+    }
+
+    // Siempre guardar en localStorage como fallback / confirmación inmediata
     const order = {
       orderNumber,
       date: new Date().toISOString(),
       items: cart,
-      total: totalPrice + (totalPrice >= 30000 ? 0 : 2990),
+      total: totalPrice + shipping,
       userData,
       paymentMethod,
       status: 0,
@@ -73,7 +122,7 @@ export function CartProvider({ children }) {
     setLastOrder(order)
     localStorage.setItem("zetapets-last-order", JSON.stringify(order))
     clearCart()
-    return orderNumber
+    return { ok: true, orderNumber }
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
