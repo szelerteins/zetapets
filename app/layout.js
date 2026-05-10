@@ -7,6 +7,7 @@ import Toast from "../components/Toast"
 import WhatsAppButton from "../components/WhatsAppButton"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { Analytics } from "@vercel/analytics/next"
+import PageViewTracker from "../components/PageViewTracker"
 import "../styles/globals.css"
 import "../styles/admin.css"
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
             <Footer />
             <Toast />
             <WhatsAppButton />
+            <PageViewTracker />
           </CartProvider>
         </AuthProvider>
         {process.env.NEXT_PUBLIC_GA_ID && (
