@@ -902,6 +902,77 @@
   .analytics-info-grid { grid-template-columns: 1fr; }
 }
 
+/* Range tabs */
+.analytics-range-tabs {
+  display: flex;
+  gap: 6px;
+  background: #F3F4F6;
+  border-radius: 12px;
+  padding: 4px;
+  width: fit-content;
+}
+.analytics-range-tab {
+  padding: 7px 16px;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6B7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.analytics-range-tab.active {
+  background: #fff;
+  color: #7C3AED;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.analytics-range-tab:hover:not(.active) { color: #374151; }
+
+/* 6-col metrics */
+.analytics-metrics--6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+@media (max-width: 1200px) { .analytics-metrics--6 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .analytics-metrics--6 { grid-template-columns: repeat(2, 1fr); } }
+
+/* Scroll depth bar in table */
+.scroll-depth-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+.scroll-depth-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #7C3AED;
+  min-width: 2px;
+  max-width: 80px;
+  flex-shrink: 0;
+}
+
+/* Heatmap grid */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  aspect-ratio: 9/16;
+  max-height: 320px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #F9FAFB;
+}
+.heatmap-cell {
+  cursor: default;
+  transition: opacity 0.1s;
+  border-radius: 2px;
+}
+.heatmap-cell:hover { outline: 1px solid rgba(239,68,68,0.5); }
+
 .analytics-banner code {
   background: rgba(0,0,0,0.08);
   padding: 1px 5px;
