@@ -1,179 +1,189 @@
 "use client"
 
-import { analytics, salesByDay } from "../../data/adminData"
+import { useState, useEffect } from "react"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
-const isConnected = !!GA_ID
 
 export default function AnalyticsPanel() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch("/api/admin/analytics")
+      .then(r => r.json())
+      .then(res => {
+        if (res.error) setError(res.error)
+        else setData(res)
+        setLoading(false)
+      })
+      .catch(() => { setError("Error de conexión"); setLoading(false) })
+  }, [])
+
+  const notConfigured = error === "GA no configurado"
+
   return (
     <div className="analytics-wrap">
 
-      {/* Estado de conexión */}
-      {isConnected ? (
+      {/* Banner estado */}
+      {notConfigured ? (
+        <>
+          <div className="analytics-banner analytics-banner--warning">
+            <span>⚠️</span>
+            <div>
+              <strong>Analytics no está conectado al panel todavía.</strong>
+              <span> Seguí los pasos de abajo para ver los datos reales aquí.</span>
+            </div>
+          </div>
+          <div className="analytics-setup">
+            <h3 className="analytics-setup-title">Cómo ver los datos de GA en el panel (3 pasos)</h3>
+            <ol className="analytics-setup-steps">
+              <li>
+                Entrá a{" "}
+                <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>
+                {" "}→ creá un proyecto → habilitá la <strong>API: "Google Analytics Data API"</strong>
+              </li>
+              <li>
+                Dentro del proyecto → <strong>IAM y administración → Cuentas de servicio → Crear</strong>
+                → descargá el archivo <strong>JSON</strong> de credenciales
+              </li>
+              <li>
+                En <strong>Google Analytics → Admin → Acceso a la propiedad</strong> → agregá el email
+                de la cuenta de servicio con rol <strong>Lector</strong>
+              </li>
+              <li>
+                En <strong>Vercel → Environment Variables</strong> agregá estas dos variables:
+                <code className="analytics-env-var">GOOGLE_GA_PROPERTY_ID = 123456789</code>
+                <span style={{ fontSize: "0.78rem", color: "#6B7280", display: "block", margin: "4px 0 8px" }}>
+                  (el número que aparece en GA → Admin → Información de la propiedad, sin el prefijo "properties/")
+                </span>
+                <code className="analytics-env-var">GOOGLE_SA_CREDENTIALS = {"{"}"type":"service_account","project_id":"..."{"}"}</code>
+                <span style={{ fontSize: "0.78rem", color: "#6B7280", display: "block", marginTop: 4 }}>
+                  (pegá el contenido completo del archivo JSON en una sola línea)
+                </span>
+              </li>
+              <li>Hacé <strong>Redeploy</strong> en Vercel → ¡listo! Los datos van a aparecer acá.</li>
+            </ol>
+          </div>
+        </>
+      ) : (
         <div className="analytics-banner analytics-banner--connected">
           <span>✅</span>
-          <span>
-            Google Analytics conectado correctamente —{" "}
-            <strong>{GA_ID}</strong>
-          </span>
-          <a
-            href={`https://analytics.google.com/analytics/web/#/p${GA_ID?.replace("G-", "")}/reports/reportinghub`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="analytics-ga-btn"
-          >
-            Abrir Google Analytics →
-          </a>
-        </div>
-      ) : (
-        <div className="analytics-banner analytics-banner--warning">
-          <span>⚠️</span>
-          <div>
-            <strong>Google Analytics no está conectado todavía.</strong>
-            <span> Seguí los pasos de abajo para activarlo.</span>
-          </div>
-        </div>
-      )}
-
-      {/* Pasos de configuración si no está conectado */}
-      {!isConnected && (
-        <div className="analytics-setup">
-          <h3 className="analytics-setup-title">Cómo conectar Google Analytics</h3>
-          <ol className="analytics-setup-steps">
-            <li>
-              Entrá a{" "}
-              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">
-                analytics.google.com
-              </a>{" "}
-              → creá una cuenta y una propiedad <strong>GA4</strong> para tu sitio
-            </li>
-            <li>
-              En Google Analytics → <strong>Admin → Flujos de datos → tu sitio</strong> → copiá el <strong>ID de medición</strong> (empieza con <code>G-</code>)
-            </li>
-            <li>
-              En <strong>Vercel → Settings → Environment Variables</strong> agregá:
-              <code className="analytics-env-var">NEXT_PUBLIC_GA_ID = G-XXXXXXXXXX</code>
-            </li>
-            <li>
-              Hacé <strong>Redeploy</strong> en Vercel y listo — cada visita quedará registrada en GA
-            </li>
-          </ol>
-        </div>
-      )}
-
-      {/* Botón directo al dashboard de GA */}
-      {isConnected && (
-        <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+          <span>Google Analytics conectado — datos de los últimos 28 días</span>
           <a
             href="https://analytics.google.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="analytics-action-btn analytics-action-btn--primary"
+            className="analytics-ga-btn"
           >
-            📊 Ver reporte completo en GA
-          </a>
-          <a
-            href="https://analytics.google.com/analytics/web/#/realtime"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="analytics-action-btn"
-          >
-            🟢 Usuarios en tiempo real
+            Abrir GA →
           </a>
         </div>
       )}
 
-      {/* Métricas — reales si GA está conectado, estimadas si no */}
-      <div className="analytics-metrics">
-        <div className="analytics-metric">
-          <span className="analytics-metric-icon">👥</span>
-          <div>
-            <p className="analytics-metric-value">{isConnected ? "Ver en GA" : analytics.activeUsers}</p>
-            <p className="analytics-metric-label">Usuarios activos ahora</p>
-          </div>
+      {/* Loading */}
+      {loading && !notConfigured && (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "#6B7280" }}>
+          Cargando datos de Google Analytics...
         </div>
-        <div className="analytics-metric">
-          <span className="analytics-metric-icon">👁️</span>
-          <div>
-            <p className="analytics-metric-value">{isConnected ? "Ver en GA" : analytics.pageViews.toLocaleString()}</p>
-            <p className="analytics-metric-label">Vistas del mes</p>
-          </div>
-        </div>
-        <div className="analytics-metric">
-          <span className="analytics-metric-icon">⏱️</span>
-          <div>
-            <p className="analytics-metric-value">{isConnected ? "Ver en GA" : analytics.avgSessionDuration}</p>
-            <p className="analytics-metric-label">Duración promedio</p>
-          </div>
-        </div>
-        <div className="analytics-metric">
-          <span className="analytics-metric-icon">↩️</span>
-          <div>
-            <p className="analytics-metric-value">{isConnected ? "Ver en GA" : `${analytics.bounceRate}%`}</p>
-            <p className="analytics-metric-label">Tasa de rebote</p>
-          </div>
-        </div>
-      </div>
+      )}
 
-      {!isConnected && (
-        <div className="analytics-grid">
-          {/* Fuentes de tráfico (simulado) */}
-          <div className="admin-chart-card">
-            <h3 className="admin-chart-title">Fuente de tráfico <span className="badge-sim">estimado</span></h3>
-            {analytics.trafficSources.map((s) => (
-              <div key={s.source} className="traffic-row">
-                <span className="traffic-source">{s.source}</span>
-                <div className="traffic-bar-wrap">
-                  <div className="traffic-bar" style={{ width: `${s.porcentaje}%`, background: s.color }} />
-                </div>
-                <span className="traffic-pct">{s.porcentaje}%</span>
-                <span className="traffic-visits">{s.visitas.toLocaleString()} visitas</span>
+      {/* Error genérico */}
+      {error && !notConfigured && (
+        <div className="analytics-banner analytics-banner--warning" style={{ marginTop: 12 }}>
+          <span>❌</span>
+          <span>Error al cargar: <strong>{error}</strong></span>
+        </div>
+      )}
+
+      {/* Datos reales */}
+      {data && (
+        <>
+          {/* Métricas rápidas */}
+          <div className="analytics-metrics">
+            <div className="analytics-metric">
+              <span className="analytics-metric-icon">👥</span>
+              <div>
+                <p className="analytics-metric-value">{data.metrics.activeUsers.toLocaleString()}</p>
+                <p className="analytics-metric-label">Usuarios activos (28 días)</p>
               </div>
-            ))}
-          </div>
-
-          {/* Páginas más vistas (simulado) */}
-          <div className="admin-chart-card">
-            <h3 className="admin-chart-title">Páginas más vistas <span className="badge-sim">estimado</span></h3>
-            <div className="admin-table-scroll">
-              <table className="admin-table">
-                <thead>
-                  <tr><th>Página</th><th>Visitas</th><th>Tiempo</th></tr>
-                </thead>
-                <tbody>
-                  {analytics.topPages.map((p) => (
-                    <tr key={p.page}>
-                      <td><code>{p.page}</code></td>
-                      <td>{p.visitas.toLocaleString()}</td>
-                      <td>{p.tiempo}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            </div>
+            <div className="analytics-metric">
+              <span className="analytics-metric-icon">👁️</span>
+              <div>
+                <p className="analytics-metric-value">{data.metrics.pageViews.toLocaleString()}</p>
+                <p className="analytics-metric-label">Vistas de página</p>
+              </div>
+            </div>
+            <div className="analytics-metric">
+              <span className="analytics-metric-icon">⏱️</span>
+              <div>
+                <p className="analytics-metric-value">{data.metrics.avgSessionDuration}</p>
+                <p className="analytics-metric-label">Duración promedio</p>
+              </div>
+            </div>
+            <div className="analytics-metric">
+              <span className="analytics-metric-icon">↩️</span>
+              <div>
+                <p className="analytics-metric-value">{data.metrics.bounceRate}%</p>
+                <p className="analytics-metric-label">Tasa de rebote</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Gráfico visitas estimadas (solo si no hay GA) */}
-      {!isConnected && (
-        <div className="admin-chart-card">
-          <h3 className="admin-chart-title">Visitas diarias <span className="badge-sim">estimado</span></h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={salesByDay.map((d) => ({ day: d.day, visitas: d.ventas * 18 }))}
-              margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="day" tick={{ fontSize: 11 }} interval={1} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v) => [v, "Visitas"]} />
-              <Bar dataKey="visitas" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+          <div className="analytics-grid">
+            {/* Fuentes de tráfico */}
+            <div className="admin-chart-card">
+              <h3 className="admin-chart-title">Fuente de tráfico</h3>
+              {data.trafficSources.map((s) => (
+                <div key={s.source} className="traffic-row">
+                  <span className="traffic-source">{s.source}</span>
+                  <div className="traffic-bar-wrap">
+                    <div className="traffic-bar" style={{ width: `${s.porcentaje}%`, background: s.color }} />
+                  </div>
+                  <span className="traffic-pct">{s.porcentaje}%</span>
+                  <span className="traffic-visits">{s.visitas.toLocaleString()} sesiones</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Páginas más vistas */}
+            <div className="admin-chart-card">
+              <h3 className="admin-chart-title">Páginas más vistas</h3>
+              <div className="admin-table-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Página</th><th>Vistas</th><th>Tiempo</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.topPages.map((p) => (
+                      <tr key={p.page}>
+                        <td><code>{p.page}</code></td>
+                        <td>{p.visitas.toLocaleString()}</td>
+                        <td>{p.tiempo}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Gráfico visitas diarias */}
+          <div className="admin-chart-card">
+            <h3 className="admin-chart-title">Sesiones diarias — últimos 14 días</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={data.salesByDay} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v) => [v, "Sesiones"]} />
+                <Bar dataKey="ventas" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Sesiones" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
       )}
 
     </div>
