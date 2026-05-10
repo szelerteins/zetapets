@@ -838,6 +838,70 @@
   margin-left: 6px;
 }
 
+/* ── Vercel Analytics Panel ── */
+.analytics-shortcuts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.analytics-shortcut-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 16px 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.analytics-shortcut-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-color: #7C3AED;
+}
+.analytics-shortcut-icon { font-size: 1.8rem; flex-shrink: 0; }
+.analytics-shortcut-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 2px;
+}
+.analytics-shortcut-sub { font-size: 0.78rem; color: #6B7280; }
+.analytics-shortcut-arrow {
+  margin-left: auto;
+  font-size: 1.1rem;
+  color: #7C3AED;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.analytics-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.analytics-info-card {
+  background: #F9FAFB;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+}
+.analytics-info-icon { font-size: 1.6rem; margin-bottom: 8px; }
+.analytics-info-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 6px;
+}
+.analytics-info-text { font-size: 0.78rem; color: #6B7280; line-height: 1.5; }
+
+@media (max-width: 768px) {
+  .analytics-shortcuts { grid-template-columns: 1fr; }
+  .analytics-info-grid { grid-template-columns: 1fr; }
+}
+
 .analytics-banner code {
   background: rgba(0,0,0,0.08);
   padding: 1px 5px;

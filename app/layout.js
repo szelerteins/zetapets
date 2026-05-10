@@ -6,6 +6,7 @@ import Footer from "../components/Footer"
 import Toast from "../components/Toast"
 import WhatsAppButton from "../components/WhatsAppButton"
 import { GoogleAnalytics } from "@next/third-parties/google"
+import { Analytics } from "@vercel/analytics/next"
 import "../styles/globals.css"
 import "../styles/admin.css"
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         {process.env.NEXT_PUBLIC_GA_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
         )}
+        <Analytics />
       </body>
     </html>
   )
