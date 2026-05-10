@@ -79,7 +79,7 @@ export default function HomePage() {
       <section className="why-section">
         <div className="container">
           <div className="section-header">
-            <h2>¿Por qué elegir ZetaPets?</h2>
+            <h2>¿Por qué elegir <span className="brand-gradient">ZetaPets</span>?</h2>
             <p>Hacemos que cuidar a tu mascota sea simple y moderno</p>
           </div>
           <div className="why-grid">
@@ -100,7 +100,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="cta-banner">
+      <section className="cta-banner" id="cta">
         <div className="container">
           <h2>Todo lo que tu mascota necesita,<br />en un solo lugar</h2>
           <p>Descubrí productos que combinan diseño, tecnología y amor por los animales.</p>

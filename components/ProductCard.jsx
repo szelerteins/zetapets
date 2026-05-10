@@ -2,7 +2,24 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useCart } from "../context/CartContext"
+import {
+  MdOutlineSpa, MdOutlineSportsEsports, MdOutlineRestaurant,
+  MdOutlineDirectionsWalk, MdOutlineDevices, MdOutlineBuild,
+  MdOutlineStyle, MdPets, MdOutlineCategory, MdOutlineCheckCircle,
+} from "react-icons/md"
+
+const CATEGORY_ICONS = {
+  Higiene:      MdOutlineSpa,
+  Juguetes:     MdOutlineSportsEsports,
+  Alimentación: MdOutlineRestaurant,
+  Paseo:        MdOutlineDirectionsWalk,
+  Tecnología:   MdOutlineDevices,
+  Repuestos:    MdOutlineBuild,
+  Accesorios:   MdOutlineStyle,
+  Gatos:        MdPets,
+}
 
 const badgeClass = {
   Nuevo: "nuevo",
@@ -34,37 +51,43 @@ export default function ProductCard({ product }) {
   const [added, setAdded] = useState(false)
 
   const gradient = cardGradients[product.id % cardGradients.length]
+  const CategoryIcon = CATEGORY_ICONS[product.category] || MdOutlineCategory
 
-  function handleAdd() {
+  function handleAdd(e) {
+    e.preventDefault()
     addToCart(product, selected)
     setAdded(true)
     setTimeout(() => setAdded(false), 1200)
   }
 
   return (
-    <article className="product-card">
-      <div className="product-image" style={!product.image ? { background: gradient } : {}}>
-        {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            style={{ objectFit: "cover" }}
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
-        ) : (
-          <span className="product-emoji">{product.emoji}</span>
-        )}
-        {product.badge && (
-          <span className={`product-badge ${badgeClass[product.badge] || ""}`}>
-            {product.badge}
-          </span>
-        )}
-      </div>
+    <article className="product-card product-card--clickable">
+      <Link href={`/productos/${product.id}`} className="product-card-link" aria-label={product.name}>
+        <div className="product-image" style={!product.image ? { background: gradient } : {}}>
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              style={{ objectFit: "cover" }}
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          ) : (
+            <CategoryIcon size={52} className="product-category-icon" />
+          )}
+          {product.badge && (
+            <span className={`product-badge ${badgeClass[product.badge] || ""}`}>
+              {product.badge}
+            </span>
+          )}
+        </div>
+      </Link>
 
       <div className="product-body">
         <p className="product-category">{product.category}</p>
-        <h3 className="product-name">{product.name}</h3>
+        <Link href={`/productos/${product.id}`} className="product-name-link">
+          <h3 className="product-name">{product.name}</h3>
+        </Link>
         <p className="product-desc">{product.description}</p>
 
         {product.variants && (
@@ -88,7 +111,11 @@ export default function ProductCard({ product }) {
             onClick={handleAdd}
             style={{ transition: "all 0.3s ease" }}
           >
-            {added ? "✓ Agregado" : "+ Agregar"}
+            {added ? (
+              <><MdOutlineCheckCircle size={15} style={{ verticalAlign: "middle", marginRight: 4 }} />Agregado</>
+            ) : (
+              "+ Agregar"
+            )}
           </button>
         </div>
       </div>

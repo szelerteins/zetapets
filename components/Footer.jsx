@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { MdPets } from "react-icons/md"
 
 export default function Footer() {
   return (
@@ -7,7 +8,8 @@ export default function Footer() {
         <div className="footer-grid">
           <div>
             <Link href="/" className="logo footer-logo">
-              🐾 Zeta<span>Pets</span>
+              <MdPets size={20} style={{ verticalAlign: "middle", marginRight: 6, color: "#4CC81A" }} />
+              <span className="brand-gradient">ZetaPets</span>
             </Link>
             <p className="footer-desc">
               Productos inteligentes para mascotas felices. Diseño, tecnología y
@@ -52,8 +54,8 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <p>© 2026 ZetaPets. Todos los derechos reservados.</p>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.82rem" }}>
-            Hecho con 🐾 para mascotas
+          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: 4 }}>
+            Hecho con <MdPets size={14} /> para mascotas
           </p>
         </div>
       </div>

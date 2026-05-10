@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { MdLocalShipping, MdOutlineLocalOffer, MdOutlineInventory2 } from "react-icons/md"
 
 const messages = [
-  "🚚 Envíos gratis a todo el país en compras desde $60.000",
-  "💸 10% OFF pagando por transferencia bancaria",
-  "📦 Envíos por Correo Argentino a todo el país",
+  { icon: MdLocalShipping, text: "Envíos gratis a todo el país en compras desde $60.000" },
+  { icon: MdOutlineLocalOffer, text: "10% OFF pagando por transferencia bancaria" },
+  { icon: MdOutlineInventory2, text: "Envíos por Correo Argentino a todo el país" },
 ]
 
 export default function AnnouncementBar() {
@@ -23,6 +24,8 @@ export default function AnnouncementBar() {
     return () => clearInterval(interval)
   }, [])
 
+  const { icon: Icon, text } = messages[current]
+
   return (
     <div className="announcement-bar">
       <div className="announcement-track">
@@ -30,7 +33,8 @@ export default function AnnouncementBar() {
           key={current}
           className={`announcement-msg ${animating ? "slide-out" : "slide-in"}`}
         >
-          {messages[current]}
+          <Icon size={15} style={{ marginRight: 6, verticalAlign: "middle", flexShrink: 0 }} />
+          {text}
         </span>
       </div>
       <div className="announcement-dots">

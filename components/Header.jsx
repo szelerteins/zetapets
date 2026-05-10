@@ -7,6 +7,7 @@ import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import CartDrawer from "./CartDrawer"
 import LogoAnimated from "./LogoAnimated"
+import { MdOutlineAdminPanelSettings, MdOutlineAccountCircle, MdOutlineInventory2, MdOutlineLogout } from "react-icons/md"
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -52,21 +53,25 @@ function UserMenu({ user, isAdmin, onLogout }) {
           <hr className="user-dropdown-divider" />
           {isAdmin && (
             <Link href="/admin/dashboard" className="user-dropdown-item user-dropdown-admin" onClick={() => setOpen(false)}>
-              🛡️ Panel de administrador
+              <MdOutlineAdminPanelSettings size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
+              Panel de administrador
             </Link>
           )}
           {isAdmin && <hr className="user-dropdown-divider" />}
           <Link href="/account" className="user-dropdown-item" onClick={() => setOpen(false)}>
-            👤 Mi cuenta
+            <MdOutlineAccountCircle size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
+            Mi cuenta
           </Link>
           <Link href="/orders" className="user-dropdown-item" onClick={() => setOpen(false)}>
-            📦 Mis pedidos
+            <MdOutlineInventory2 size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
+            Mis pedidos
           </Link>
           <button
             className="user-dropdown-item user-dropdown-logout"
             onClick={() => { setOpen(false); onLogout() }}
           >
-            🚪 Cerrar sesión
+            <MdOutlineLogout size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
+            Cerrar sesión
           </button>
         </div>
       )}
@@ -178,7 +183,7 @@ export default function Header() {
           {user ? (
             <>
               <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", padding: "4px 0" }}>
-                Hola, {user.nombre} 👋
+                Hola, {user.nombre}
               </span>
               {isAdmin && (
                 <Link
@@ -186,7 +191,8 @@ export default function Header() {
                   onClick={() => setMenuOpen(false)}
                   style={{ display: "flex", alignItems: "center", gap: "6px", color: "#fbbf24", fontWeight: 700, fontSize: "0.95rem", padding: "4px 0", textDecoration: "none" }}
                 >
-                  🛡️ Panel de administrador
+                  <MdOutlineAdminPanelSettings size={16} />
+                  Panel de administrador
                 </Link>
               )}
               <button

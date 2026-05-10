@@ -44,7 +44,7 @@ export const categories = [
   {
     id: "accesorios",
     name: "Accesorios",
-    image: "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=600&auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1583511655826-05700d52f4d9?w=800&auto=format&fit=crop&q=80",
     description: "Complementos y detalles especiales",
     color: "#5BC0EB",
   },
