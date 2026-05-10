@@ -16,6 +16,7 @@ export default function RegisterClient() {
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState("")
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -36,12 +37,39 @@ export default function RegisterClient() {
     setLoading(false)
 
     if (result.ok) {
-      router.push("/")
-      router.refresh()
+      if (result.confirmationRequired) {
+        setConfirmEmail(result.email)
+      } else {
+        router.push("/")
+        router.refresh()
+      }
     } else {
       if (result.details) setErrors(result.details)
       else setApiError(result.error)
     }
+  }
+
+  // Pantalla de confirmación pendiente
+  if (confirmEmail) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="confirm-email-icon">📬</div>
+          <h1 className="auth-title">¡Revisá tu email!</h1>
+          <p className="auth-sub">
+            Te enviamos un link de confirmación a
+          </p>
+          <p className="confirm-email-address">{confirmEmail}</p>
+          <p className="confirm-email-hint">
+            Hacé clic en el link del mail para activar tu cuenta. <br />
+            Si no lo ves, revisá la carpeta de spam.
+          </p>
+          <Link href="/login" className="admin-login-btn" style={{ display: "block", textAlign: "center", textDecoration: "none", marginTop: 24 }}>
+            Ir al inicio de sesión
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (

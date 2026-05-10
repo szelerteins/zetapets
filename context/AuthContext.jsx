@@ -63,12 +63,28 @@ export function AuthProvider({ children }) {
   async function register({ nombre, apellido, email, password }) {
     const supabase = getClient()
     if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
+
+    const redirectTo = typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback`
+      : undefined
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: `${nombre} ${apellido}` } },
+      options: {
+        emailRedirectTo: redirectTo,
+        data: { full_name: `${nombre} ${apellido}` },
+      },
     })
+
     if (error) return { ok: false, error: error.message }
+
+    // Si no hay sesión → confirmación de email requerida
+    if (!data.session) {
+      return { ok: true, confirmationRequired: true, email }
+    }
+
+    // Si hay sesión (confirmación deshabilitada) → login automático
     if (data.user) {
       await supabase.from("profiles").upsert({
         user_id:   data.user.id,
