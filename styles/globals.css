@@ -557,6 +557,22 @@ img { max-width: 100%; display: block; }
   gap: 16px;
   position: relative;
   z-index: 1;
+  text-decoration: none;
+  color: inherit;
+}
+.hero-product-card--link {
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.hero-product-card--link:hover {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.16);
+  transform: translateY(-3px);
+}
+.hero-product-cta {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #7AC74F;
+  margin-top: 2px;
 }
 
 .hero-card-fade-in {

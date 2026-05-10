@@ -5,11 +5,11 @@ import Image from "next/image"
 import Link from "next/link"
 
 const heroProducts = [
-  { src: "/productos/comedero-v2.jpg",     name: "Comedero Automático V2",    price: "$79.990" },
-  { src: "/productos/dispenser-comida.jpg", name: "Dispenser Inteligente",     price: "$52.990" },
-  { src: "/productos/bebedero.jpg",         name: "Bebedero con Filtro",       price: "$24.990" },
-  { src: "/productos/collar-airtag.jpg",    name: "Collar con AirTag",         price: "$12.990" },
-  { src: "/productos/airtag.jpg",           name: "AirTag Apple",              price: "$29.990" },
+  { src: "/productos/comedero-v2.jpg",     name: "Comedero Automático V2",    price: "$79.990", href: "/productos/13" },
+  { src: "/productos/dispenser-comida.jpg", name: "Dispenser Inteligente",     price: "$52.990", href: "/productos/3"  },
+  { src: "/productos/bebedero.jpg",         name: "Bebedero con Filtro",       price: "$24.990", href: "/productos/6"  },
+  { src: "/productos/collar-airtag.jpg",    name: "Collar con AirTag",         price: "$12.990", href: "/productos/8"  },
+  { src: "/productos/airtag.jpg",           name: "AirTag Apple",              price: "$29.990", href: "/productos/9"  },
 ]
 
 export default function Hero() {
@@ -71,7 +71,10 @@ export default function Hero() {
         <div className="hero-split-right">
 
           {/* Product card */}
-          <div className={`hero-product-card ${fading ? "hero-card-fade-out" : "hero-card-fade-in"}`}>
+          <Link
+            href={product.href}
+            className={`hero-product-card hero-product-card--link ${fading ? "hero-card-fade-out" : "hero-card-fade-in"}`}
+          >
             <div className="hero-product-img">
               <Image
                 src={product.src}
@@ -85,8 +88,9 @@ export default function Hero() {
             <div className="hero-product-info">
               <span className="hero-product-name">{product.name}</span>
               <span className="hero-product-price">{product.price}</span>
+              <span className="hero-product-cta">Ver producto →</span>
             </div>
-          </div>
+          </Link>
 
           {/* Dots indicator */}
           <div className="hero-product-dots">
