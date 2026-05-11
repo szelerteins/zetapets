@@ -1,146 +1,152 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { useCart } from "../context/CartContext"
-
-const TRACKING_STEPS = [
-  { label: "Pedido confirmado", icon: "✅", desc: "Tu pedido fue recibido con éxito" },
-  { label: "Preparando pedido", icon: "📦", desc: "Estamos preparando tus productos" },
-  { label: "Enviado", icon: "🚚", desc: "El paquete salió de nuestro depósito" },
-  { label: "En camino", icon: "📍", desc: "Tu pedido está cerca de vos" },
-  { label: "Entregado", icon: "🎉", desc: "¡Tu pedido llegó!" },
-]
 
 function formatPrice(n) {
-  return "$" + n.toLocaleString("es-AR")
+  return "$" + Number(n).toLocaleString("es-AR")
 }
 
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString("es-AR", {
+function formatDate(str) {
+  return new Date(str).toLocaleDateString("es-AR", {
     day: "2-digit", month: "long", year: "numeric",
   })
 }
 
 export default function OrderConfirmation() {
-  const { lastOrder } = useCart()
+  const params  = useSearchParams()
+  const status  = params.get("status")
+  const orderId = params.get("order_id")
 
-  if (!lastOrder) {
+  const [order,   setOrder]   = useState(null)
+  const [loading, setLoading] = useState(!!orderId)
+
+  useEffect(() => {
+    if (!orderId) return
+    fetch(`/api/orders/${orderId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setOrder(data); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [orderId])
+
+  if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "80px 0" }}>
-        <p style={{ fontSize: "3rem" }}>📋</p>
-        <p style={{ fontWeight: 700, marginTop: "16px", fontSize: "1.2rem" }}>
-          No hay ninguna orden reciente
-        </p>
-        <Link href="/productos" className="btn btn-primary" style={{ marginTop: "24px", display: "inline-flex" }}>
-          Ir a productos
-        </Link>
+        <p style={{ fontSize: "2rem" }}>⏳</p>
+        <p style={{ color: "#64748b", marginTop: "12px" }}>Cargando tu pedido…</p>
       </div>
     )
   }
 
-  const currentStep = 1
+  if (status === "failure") {
+    return (
+      <div style={{ maxWidth: "520px", margin: "60px auto", textAlign: "center" }}>
+        <p style={{ fontSize: "3.5rem" }}>❌</p>
+        <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#dc2626", margin: "16px 0 8px" }}>
+          El pago no fue procesado
+        </h1>
+        <p style={{ color: "#64748b", marginBottom: "32px" }}>
+          Podés intentarlo nuevamente o contactarnos si el problema persiste.
+        </p>
+        <Link href="/checkout" className="btn btn-primary">Volver al checkout</Link>
+      </div>
+    )
+  }
 
-  return (
-    <div className="order-confirmation">
-
-      {/* Header de éxito */}
-      <div className="order-success-header">
-        <div className="order-success-icon">🎉</div>
-        <h1>¡Compra realizada con éxito!</h1>
-        <p>Gracias <strong>{lastOrder.userData?.nombre}</strong>, tu pedido está en camino.</p>
-        <div className="order-number-badge">
-          Orden #{lastOrder.orderNumber}
+  if (status === "pending") {
+    return (
+      <div style={{ maxWidth: "520px", margin: "60px auto", textAlign: "center" }}>
+        <p style={{ fontSize: "3.5rem" }}>⏳</p>
+        <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#d97706", margin: "16px 0 8px" }}>
+          Pago pendiente de acreditación
+        </h1>
+        <p style={{ color: "#64748b", marginBottom: "16px" }}>
+          Tu pedido fue recibido. Te avisaremos por email cuando el pago sea confirmado.
+        </p>
+        {order?.order_number && (
+          <p style={{ background: "#fef9c3", borderRadius: "8px", padding: "10px 16px", display: "inline-block", fontWeight: 700, color: "#92400e" }}>
+            N° pedido: {order.order_number}
+          </p>
+        )}
+        <div style={{ marginTop: "32px" }}>
+          <Link href="/productos" className="btn btn-outline">Ver productos</Link>
         </div>
-        <p className="order-date">Realizada el {formatDate(lastOrder.date)}</p>
+      </div>
+    )
+  }
+
+  // approved
+  return (
+    <div style={{ maxWidth: "560px", margin: "48px auto" }}>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <p style={{ fontSize: "3.5rem" }}>✅</p>
+        <h1 style={{ fontSize: "1.7rem", fontWeight: 800, color: "#16a34a", margin: "12px 0 8px" }}>
+          ¡Compra confirmada!
+        </h1>
+        <p style={{ color: "#475569" }}>Gracias por tu compra. Te enviamos los detalles por email.</p>
       </div>
 
-      <div className="order-body">
-
-        {/* Timeline de tracking */}
-        <div className="order-card">
-          <h2 className="order-card-title">Estado de tu envío</h2>
-          <div className="tracking-timeline">
-            {TRACKING_STEPS.map((s, i) => {
-              const isDone = i < currentStep
-              const isCurrent = i === currentStep
-              const isPending = i > currentStep
-              return (
-                <div key={i} className={`track-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""} ${isPending ? "pending" : ""}`}>
-                  <div className="track-left">
-                    <div className="track-circle">
-                      <span>{s.icon}</span>
-                    </div>
-                    {i < TRACKING_STEPS.length - 1 && (
-                      <div className={`track-line ${isDone ? "done" : ""}`} />
-                    )}
-                  </div>
-                  <div className="track-content">
-                    <p className="track-label">{s.label}</p>
-                    <p className="track-desc">{s.desc}</p>
-                    {isCurrent && (
-                      <span className="track-current-badge">Estado actual</span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+      {order && (
+        <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "20px 24px", marginBottom: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+            <div>
+              <p style={{ margin: 0, fontSize: "0.78rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>N° de pedido</p>
+              <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1.05rem" }}>{order.order_number}</p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ margin: 0, fontSize: "0.78rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha</p>
+              <p style={{ margin: "2px 0 0", fontWeight: 600, fontSize: "0.9rem" }}>{formatDate(order.created_at)}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Resumen del pedido */}
-        <div className="order-card">
-          <h2 className="order-card-title">Resumen del pedido</h2>
-          <div className="order-items">
-            {lastOrder.items?.map((item) => (
-              <div key={item.cartKey} className="order-item">
-                <span className="order-item-emoji">{item.emoji}</span>
-                <div className="order-item-info">
-                  <p className="order-item-name">{item.name}</p>
-                  {item.selectedVariant && (
-                    <p className="order-item-variant">Variante: {item.selectedVariant}</p>
-                  )}
+          {order.order_items?.length > 0 && (
+            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginBottom: "16px" }}>
+              {order.order_items.map((item, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: "0.9rem", color: "#334155" }}>
+                  <span>
+                    {item.product_emoji && `${item.product_emoji} `}
+                    {item.product_name}
+                    {item.variant ? ` (${item.variant})` : ""}
+                    {" "}×{item.quantity}
+                  </span>
+                  <span style={{ fontWeight: 600 }}>{formatPrice(item.total_price)}</span>
                 </div>
-                <div className="order-item-right">
-                  <span className="order-item-qty">x{item.quantity}</span>
-                  <span className="order-item-price">{formatPrice(item.price * item.quantity)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="order-total-line">
+              ))}
+            </div>
+          )}
+
+          <div style={{ borderTop: "2px solid #e2e8f0", paddingTop: "12px", display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "1.05rem" }}>
             <span>Total pagado</span>
-            <strong>{formatPrice(lastOrder.total)}</strong>
+            <span style={{ color: "var(--celeste-dark)" }}>{formatPrice(order.total)}</span>
           </div>
         </div>
+      )}
 
-        {/* Datos del comprador */}
-        <div className="order-card order-info-grid">
-          <div>
-            <h2 className="order-card-title">Datos de entrega</h2>
-            <p>{lastOrder.userData?.nombre} {lastOrder.userData?.apellido}</p>
-            <p>{lastOrder.userData?.email}</p>
-            <p>{lastOrder.userData?.telefono}</p>
-            <p>{lastOrder.userData?.direccion}, CP {lastOrder.userData?.codigoPostal}</p>
-          </div>
-          <div>
-            <h2 className="order-card-title">Método de pago</h2>
-            <p style={{ textTransform: "capitalize", fontWeight: 600 }}>
-              {{
-                tarjeta: "💳 Tarjeta de crédito/débito",
-                transferencia: "🏦 Transferencia bancaria",
-                mercadopago: "🟦 Mercado Pago",
-              }[lastOrder.paymentMethod] || lastOrder.paymentMethod}
+      <div style={{
+        background: order?.delivery_method === "pickup" ? "#f0fdf4" : "#eff6ff",
+        border: `1px solid ${order?.delivery_method === "pickup" ? "#bbf7d0" : "#bfdbfe"}`,
+        borderRadius: "10px", padding: "16px 20px", marginBottom: "28px", fontSize: "0.9rem",
+      }}>
+        {order?.delivery_method === "pickup" ? (
+          <>
+            <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#166534" }}>🏪 Retiro en local — Villa Crespo, CABA</p>
+            <p style={{ margin: 0, color: "#15803d" }}>Te vamos a confirmar la dirección exacta por email.</p>
+          </>
+        ) : (
+          <>
+            <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#1d4ed8" }}>📦 Tu pedido será enviado a:</p>
+            <p style={{ margin: 0, color: "#334155" }}>
+              {order?.shipping_name}<br />
+              {order?.shipping_address}{order?.shipping_city ? `, ${order.shipping_city}` : ""}<br />
+              {order?.shipping_postal_code ? `CP ${order.shipping_postal_code}` : ""}
             </p>
-          </div>
-        </div>
+          </>
+        )}
+      </div>
 
-        {/* CTA final */}
-        <div style={{ textAlign: "center", padding: "20px 0 40px" }}>
-          <Link href="/productos" className="btn btn-primary btn-lg">
-            Seguir comprando →
-          </Link>
-        </div>
-
+      <div style={{ textAlign: "center" }}>
+        <Link href="/productos" className="btn btn-primary">Seguir comprando</Link>
       </div>
     </div>
   )

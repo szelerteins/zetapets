@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useCart } from "../context/CartContext"
 import CartItem from "./CartItem"
+import { FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -53,15 +54,7 @@ export default function CartDrawer() {
                 <div className="cart-summary-row">
                   <span>Envío</span>
                   <span style={{ color: "var(--verde-dark)", fontWeight: 600 }}>
-                    {totalPrice >= 30000 ? "Gratis" : formatPrice(2990)}
-                  </span>
-                </div>
-                <div className="cart-summary-row total">
-                  <span>Total</span>
-                  <span>
-                    {formatPrice(
-                      totalPrice + (totalPrice >= 30000 ? 0 : 2990)
-                    )}
+                    {totalPrice >= FREE_SHIPPING_THRESHOLD ? "Gratis 🎉" : "Según tu CP"}
                   </span>
                 </div>
               </div>

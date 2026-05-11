@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { MdLocalShipping, MdOutlineLocalOffer, MdOutlineInventory2 } from "react-icons/md"
 
 const messages = [
-  { icon: MdLocalShipping, text: "Envíos gratis a todo el país en compras desde $60.000" },
+  { icon: MdLocalShipping, text: "Envíos gratis a todo el país en compras desde $80.000" },
   { icon: MdOutlineLocalOffer, text: "10% OFF pagando por transferencia bancaria" },
   { icon: MdOutlineInventory2, text: "Envíos por Correo Argentino a todo el país" },
 ]
