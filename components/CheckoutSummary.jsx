@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useCart } from "../context/CartContext"
+import { FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -9,9 +10,6 @@ function formatPrice(n) {
 
 export default function CheckoutSummary() {
   const { totalItems, totalPrice } = useCart()
-
-  const shipping = totalPrice >= 30000 ? 0 : 2990
-  const total = totalPrice + shipping
 
   return (
     <div className="checkout-summary">
@@ -23,13 +21,9 @@ export default function CheckoutSummary() {
       </div>
       <div className="summary-line">
         <span>Envío</span>
-        <span style={{ color: shipping === 0 ? "var(--verde-dark)" : "inherit", fontWeight: shipping === 0 ? 700 : 400 }}>
-          {shipping === 0 ? "Gratis" : formatPrice(shipping)}
+        <span style={{ color: totalPrice >= FREE_SHIPPING_THRESHOLD ? "var(--verde-dark)" : "inherit", fontWeight: totalPrice >= FREE_SHIPPING_THRESHOLD ? 700 : 400 }}>
+          {totalPrice >= FREE_SHIPPING_THRESHOLD ? "Gratis 🎉" : "Según tu CP"}
         </span>
-      </div>
-      <div className="summary-line total">
-        <span>Total</span>
-        <span>{formatPrice(total)}</span>
       </div>
 
       <Link
@@ -40,9 +34,9 @@ export default function CheckoutSummary() {
         Finalizar compra →
       </Link>
 
-      {totalPrice < 30000 && (
+      {totalPrice < FREE_SHIPPING_THRESHOLD && (
         <p style={{ marginTop: "12px", fontSize: "0.82rem", color: "var(--celeste-dark)", textAlign: "center" }}>
-          Agregá {formatPrice(30000 - totalPrice)} más para envío gratis 🎁
+          Agregá {formatPrice(FREE_SHIPPING_THRESHOLD - totalPrice)} más para envío gratis 🎁
         </p>
       )}
     </div>

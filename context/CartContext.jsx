@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react"
 import { createClient } from "../lib/supabase/client"
+import { getShippingCost } from "../lib/shipping-zones"
 
 const CartContext = createContext()
 
@@ -66,7 +67,7 @@ export function CartProvider({ children }) {
    */
   async function placeOrder(userData, paymentMethod) {
     const supabase = createClient()
-    const shipping = totalPrice >= 30000 ? 0 : 2990
+    const shipping = getShippingCost(userData.codigoPostal || "", totalPrice)
     const orderNumber = "ZP-" + Math.floor(100000 + Math.random() * 900000)
 
     // Intentar guardar en Supabase

@@ -4,13 +4,10 @@
 -- Ejecutar en: Supabase Dashboard → SQL Editor
 -- ============================================================
 
--- ── Extensiones ──────────────────────────────────────────────
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- ── Tabla: profiles ──────────────────────────────────────────
 -- Un perfil por usuario; se crea automáticamente al registrarse.
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name    TEXT,
   phone        TEXT,
@@ -31,7 +28,7 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
 
 -- ── Tabla: products ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.products (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
   description TEXT,
   price       NUMERIC(12,2) NOT NULL CHECK (price >= 0),
@@ -48,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 
 -- ── Tabla: orders ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.orders (
-  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id              UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   order_number         TEXT NOT NULL UNIQUE,
   status               TEXT NOT NULL DEFAULT 'pending'
@@ -68,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 
 -- ── Tabla: order_items ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.order_items (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id      UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   product_id    UUID REFERENCES public.products(id) ON DELETE SET NULL,
   product_name  TEXT NOT NULL,   -- snapshot del nombre al comprar
