@@ -1,118 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { jsPDF } from "jspdf"
-
-function downloadShippingLabel(order) {
-  const doc = new jsPDF({ unit: "mm", format: [100, 150] })
-
-  const date = new Date(order.created_at).toLocaleDateString("es-AR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  })
-  const itemCount = (order.order_items || []).reduce((s, i) => s + i.quantity, 0)
-  const clientName = order.shipping_name ||
-    order.profiles?.full_name ||
-    "—"
-  const phone = order.shipping_phone || order.profiles?.phone || ""
-
-  // Fondo blanco
-  doc.setFillColor(255, 255, 255)
-  doc.rect(0, 0, 100, 150, "F")
-
-  // Borde exterior
-  doc.setDrawColor(30, 30, 30)
-  doc.setLineWidth(0.8)
-  doc.rect(4, 4, 92, 142)
-
-  // Header ZetaPets
-  doc.setFillColor(14, 165, 233)
-  doc.rect(4, 4, 92, 22, "F")
-  doc.setTextColor(255, 255, 255)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(16)
-  doc.text("ZetaPets", 50, 13, { align: "center" })
-  doc.setFontSize(8)
-  doc.setFont("helvetica", "normal")
-  doc.text("zetapets.vercel.app", 50, 20, { align: "center" })
-
-  // Separador
-  doc.setDrawColor(200, 200, 200)
-  doc.setLineWidth(0.3)
-
-  // Sección DESTINATARIO
-  doc.setTextColor(80, 80, 80)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(7)
-  doc.text("DESTINATARIO", 9, 33)
-
-  doc.setDrawColor(14, 165, 233)
-  doc.setLineWidth(0.4)
-  doc.line(9, 35, 91, 35)
-
-  doc.setTextColor(20, 20, 20)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(11)
-  doc.text(clientName, 9, 43)
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  let y = 51
-  if (order.shipping_address) {
-    doc.text(order.shipping_address, 9, y)
-    y += 7
-  }
-  if (order.shipping_city) {
-    doc.text(order.shipping_city, 9, y)
-    y += 7
-  }
-  if (order.shipping_postal_code) {
-    doc.setFont("helvetica", "bold")
-    doc.text(`CP: ${order.shipping_postal_code}`, 9, y)
-    doc.setFont("helvetica", "normal")
-    y += 7
-  }
-  if (phone) {
-    doc.text(`Tel: ${phone}`, 9, y)
-    y += 7
-  }
-
-  // Separador
-  y = Math.max(y + 2, 90)
-  doc.setDrawColor(14, 165, 233)
-  doc.setLineWidth(0.4)
-  doc.line(9, y, 91, y)
-  y += 6
-
-  // Sección ORDEN
-  doc.setTextColor(80, 80, 80)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(7)
-  doc.text("DATOS DEL ENVÍO", 9, y)
-  y += 6
-
-  doc.setTextColor(20, 20, 20)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(10)
-  doc.text(`Orden: ${order.order_number}`, 9, y)
-  y += 7
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.text(`Fecha: ${date}`, 9, y)
-  y += 7
-  doc.text(`Cantidad: ${itemCount} ${itemCount === 1 ? "producto" : "productos"}`, 9, y)
-
-  // Footer
-  doc.setFillColor(245, 245, 245)
-  doc.rect(4, 130, 92, 16, "F")
-  doc.setTextColor(120, 120, 120)
-  doc.setFont("helvetica", "italic")
-  doc.setFontSize(7)
-  doc.text("Imprimí y pegá esta etiqueta en el paquete antes de despacharlo.", 50, 137, { align: "center" })
-  doc.text("ZetaPets · Argentina", 50, 143, { align: "center" })
-
-  doc.save(`etiqueta-${order.order_number}.pdf`)
-}
 
 const statusMap = {
   pending:   "Pendiente",
@@ -207,7 +95,8 @@ export default function OrdersTable() {
                 <th>Pago</th>
                 <th>Estado</th>
                 <th>Dirección</th>
-                <th>Etiqueta</th>
+                <th>Tracking</th>
+                <th>Etiqueta CA</th>
               </tr>
             </thead>
             <tbody>
@@ -250,24 +139,36 @@ export default function OrdersTable() {
                   <td className="address-cell">
                     {[order.shipping_address, order.shipping_city, order.shipping_postal_code].filter(Boolean).join(", ")}
                   </td>
+                  <td style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                    {order.ca_tracking_code
+                      ? <span title="Código de seguimiento Correo Argentino" style={{ fontFamily: "monospace" }}>{order.ca_tracking_code}</span>
+                      : <span style={{ color: "#cbd5e1" }}>—</span>
+                    }
+                  </td>
                   <td>
-                    <button
-                      onClick={() => downloadShippingLabel(order)}
-                      title="Descargar etiqueta de envío"
-                      style={{
-                        background: "#0ea5e9",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "6px",
-                        padding: "5px 10px",
-                        fontSize: "0.78rem",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      📦 PDF
-                    </button>
+                    {order.delivery_method === "pickup" ? (
+                      <span style={{ fontSize: "0.78rem", color: "#94a3b8" }}>Retiro local</span>
+                    ) : (
+                      <a
+                        href={`/api/admin/orders/${order.id}/label`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Descargar etiqueta oficial de Correo Argentino"
+                        style={{
+                          display: "inline-block",
+                          background: "#0ea5e9",
+                          color: "#fff",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "0.78rem",
+                          fontWeight: 600,
+                          textDecoration: "none",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        📦 Etiqueta CA
+                      </a>
+                    )}
                   </td>
                 </tr>
               ))}
