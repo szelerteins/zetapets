@@ -11,7 +11,6 @@
 - **Pagos:** MercadoPago Checkout Pro (producción)
 - **Emails:** Nodemailer + Gmail SMTP (`zetapets.ar@gmail.com`)
 - **Deploy:** Vercel — se deploya automáticamente al hacer push a `main` en GitHub (`szelerteins/zetapets`)
-- **Etiquetas de envío:** Andreani REST API (implementado, pendiente credenciales)
 
 ---
 
@@ -22,119 +21,134 @@ Están en `.env.local` (local) y en Vercel Dashboard (producción).
 | Variable | Descripción |
 |---|---|
 | `MERCADOPAGO_ACCESS_TOKEN` | Token de producción de MercadoPago |
-| `NEXT_PUBLIC_APP_URL` | URL pública (`https://zetapets.vercel.app` en prod, `http://localhost:3003` en local) |
+| `NEXT_PUBLIC_APP_URL` | URL pública (`https://zetapets.vercel.app` en prod) |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://lqkbunxkkwiyvbeaktuq.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anon de Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave service_role (bypasea RLS, solo server) |
 | `GMAIL_USER` | `zetapets.ar@gmail.com` |
 | `GMAIL_APP_PASSWORD` | App Password de Gmail (no es la contraseña de la cuenta) |
-| `ANDREANI_USUARIO` | **Pendiente** — contactar apis@andreani.com |
-| `ANDREANI_CONTRASENA` | **Pendiente** — contactar apis@andreani.com |
-| `ANDREANI_CONTRATO` | **Pendiente** — número de contrato Andreani |
-| `ANDREANI_TEST_MODE` | `true` para QA, `false` para producción |
-| `ANDREANI_REMITENTE_*` | Datos de dirección del depósito/local |
 
 ---
 
 ## Lo que está implementado y funcionando
 
-### Tienda
-- [x] Catálogo de productos con filtros por categoría
-- [x] Carrito (drawer lateral, persistencia en localStorage)
-- [x] Cálculo de envío por código postal (zonas en `lib/shipping-zones.js`)
-  - CABA (1000–1499): $3.500
-  - GBA (1500–2999): $4.500
-  - Interior (3000–9999): $6.500
-  - Envío gratis desde $80.000
-- [x] Checkout con 2 pasos: datos de envío + resumen
-- [x] Opción retiro en local (Villa Crespo, CABA)
-- [x] Integración MercadoPago Checkout Pro (pago real)
-- [x] Página de confirmación (`/confirmacion`) con estado approved / pending / failure
-- [x] Email de confirmación automático al cliente tras el pago
-
-### Base de datos (Supabase)
-Tablas: `profiles`, `admin_users`, `products`, `orders`, `order_items`
-
-Columnas relevantes en `orders`:
-- `status`: pending | confirmed | shipped | delivered | cancelled
-- `payment_status`: pending | paid | failed
-- `mercadopago_payment_id`
-- `delivery_method`: shipping | pickup
-- `ca_tracking_code` — número de seguimiento Andreani (se llena al generar la etiqueta)
-- `ca_shipment_at` — fecha en que se registró el envío
-
-Migraciones aplicadas: 001 → 008
-
-### Panel de administración (`/admin`)
-Acceso: cookie `zetapets-session=authenticated` (se setea al ingresar la clave en `/admin`)
-
-- [x] Dashboard con métricas (ventas, pedidos, clientes)
-- [x] Tabla de pedidos con filtros por estado
-- [x] Cambio de estado de pedido inline (select)
-- [x] Columna de tracking (se llena automáticamente al generar etiqueta)
-- [x] Botón "Etiqueta CA" — genera orden en Andreani y descarga PDF oficial
+- Catálogo de productos con filtros por categoría
+- Carrito con persistencia en localStorage
+- Cálculo de envío por código postal (zonas en `lib/shipping-zones.js`)
+- Checkout con datos de envío + opción retiro en local
+- Pago real con MercadoPago Checkout Pro
+- Página de confirmación post-pago (`/confirmacion`)
+- Email automático al cliente tras el pago
+- Panel admin (`/admin`) con métricas, tabla de pedidos y cambio de estado
 
 ---
 
-## Lo que falta / está pendiente
+## Etiquetas de envío — QUÉ FALTA Y CÓMO HACERLO
 
-### Inmediato — requiere acción externa
+### Situación actual
+El botón "📦 PDF" en el panel de admin genera una etiqueta **visual propia** (jsPDF) que NO tiene código de barras válido para ningún carrier. No sirve para despachar en Correo Argentino ni Andreani.
 
-- [ ] **Credenciales Andreani** — mandar mail a `apis@andreani.com` pidiendo acceso a la API.
-  Una vez recibidas, cargar en Vercel: `ANDREANI_USUARIO`, `ANDREANI_CONTRASENA`, `ANDREANI_CONTRATO` y los datos del remitente.
-  El código ya está listo en `lib/andreani.js` y `app/api/admin/orders/[id]/label/route.js`.
+### Por qué no está implementado todavía
+Se investigó la API de ambos carriers:
+- **Correo Argentino (MiCorreo API):** el endpoint de creación de envíos está marcado como *"pendiente de implementación"* en su documentación. No es posible generar etiquetas reales por API con ellos hoy.
+- **Andreani:** tiene una API REST funcional, pero requiere credenciales que se obtienen contactando a su equipo.
 
-### Mejoras planeadas
+### Cómo activar etiquetas reales con Andreani
 
-- [ ] **Profesionalizar el panel de administrador**
-  - Más gráficos, mejor diseño general
-  - Gestión de productos desde el panel (editar stock, precios, imágenes)
-  - Vista de detalle de cada pedido
+**Paso 1 — Obtener credenciales**
+Mandar un mail a `apis@andreani.com` con este texto (ya está redactado):
 
-- [ ] **Facturador automático**
-  - Generar factura PDF al confirmar el pago
-  - Opciones: integración con AFIP (requiere CUIT + certificado), o factura simplificada propia
+> Buenas tardes,
+> Me contacto para solicitar credenciales de acceso a la API REST de Andreani para integrar el servicio de envíos en mi tienda online.
+> **Datos del negocio:** ZetaPets · Venta de productos para mascotas · zetapets.vercel.app
+> **Lo que necesito:** usuario, contraseña y número de contrato para usar los endpoints `/v2/ordenes-de-envio` y `/v2/ordenes-de-envio/{id}/etiquetas`, más acceso al ambiente de testing (QA).
+> Saludos, [tu nombre]
 
-- [ ] **Enlazar Excel con la página**
-  - Exportar pedidos a `.xlsx` desde el panel admin
-  - O importar/actualizar productos desde un Excel
+Andreani suele responder en 1–3 días hábiles.
 
-- [ ] **Botón "Consultar" feo en mobile** (Hero)
-  - Revisar estilos del botón en `components/Hero.jsx` para pantallas chicas
-  - El problema está en el layout del hero en viewport < 480px
+**Paso 2 — Implementar el código**
+Una vez que tengas las credenciales, pedirle a Claude que implemente la integración. Tiene toda la información necesaria:
 
-- [ ] **Emails a spam**
-  - Configurar SPF/DKIM para `zetapets.ar@gmail.com`
-  - O migrar a un proveedor transaccional (Resend, SendGrid) para mejor entrega
+- **API base URL (prod):** `https://apis.andreani.com`
+- **API base URL (test):** `https://apisqa.andreani.com`
+- **Auth:** `POST /login` con Basic auth → respuesta trae `x-authorization-token` en el header
+- **Crear orden:** `POST /v2/ordenes-de-envio` con body JSON (ver estructura abajo)
+- **Descargar etiqueta:** `GET /v2/ordenes-de-envio/{numeroAndreani}/etiquetas?tipo=ETIQUETA_ESTANDAR`
+
+**Estructura del body para crear una orden:**
+```json
+{
+  "contrato": "TU_NUMERO_CONTRATO",
+  "origen": {
+    "codigoPostal": "CP_DEL_LOCAL",
+    "calle": "CALLE_DEL_LOCAL",
+    "numero": "NUMERO",
+    "localidad": "LOCALIDAD",
+    "region": "Buenos Aires",
+    "pais": "AR"
+  },
+  "destino": {
+    "codigoPostal": "order.shipping_postal_code",
+    "calle": "order.shipping_address",
+    "numero": "S/N",
+    "localidad": "order.shipping_city",
+    "region": "",
+    "pais": "AR"
+  },
+  "remitente": {
+    "nombreCompleto": "ZetaPets",
+    "email": "zetapets.ar@gmail.com",
+    "documentoTipo": "DNI",
+    "documentoNumero": "",
+    "telefonos": [{ "tipo": "FIJO", "numero": "TU_TELEFONO" }]
+  },
+  "destinatario": [{
+    "nombreCompleto": "order.shipping_name",
+    "email": "order.shipping_email",
+    "documentoTipo": "DNI",
+    "documentoNumero": "",
+    "telefonos": [{ "tipo": "MOVIL", "numero": "order.shipping_phone" }]
+  }],
+  "productoAEntregar": "Productos para mascotas",
+  "bultos": [{
+    "kilos": 1,
+    "largoCm": 30,
+    "altoCm": 15,
+    "anchoCm": 25,
+    "volumenCm": 11250,
+    "valorDeclaradoSinImpuestos": 1000,
+    "valorDeclaradoConImpuestos": 1210,
+    "referencias": [{ "detalle": "Pedido ZetaPets ORDER_NUMBER", "idCliente": "ORDER_UUID" }]
+  }]
+}
+```
+
+**Paso 3 — Variables de entorno a agregar en Vercel**
+```
+ANDREANI_USUARIO=       (el que te manda Andreani)
+ANDREANI_CONTRASENA=    (la que te manda Andreani)
+ANDREANI_CONTRATO=      (número de contrato, ej: 400006711)
+ANDREANI_TEST_MODE=true (cambiar a false en producción)
+ANDREANI_REMITENTE_CP=
+ANDREANI_REMITENTE_CALLE=
+ANDREANI_REMITENTE_NUMERO=
+ANDREANI_REMITENTE_LOCALIDAD=
+ANDREANI_REMITENTE_REGION=Buenos Aires
+ANDREANI_REMITENTE_TELEFONO=
+```
+
+**Paso 4 — Migraciones SQL ya aplicadas**
+Los campos `ca_tracking_code` y `ca_shipment_at` ya están en la tabla `orders` de Supabase. No hay que correr ninguna migración adicional.
 
 ---
 
-## Flujo de pago completo
+## Otras mejoras pendientes
 
-```
-Cliente → Checkout → POST /api/payments/create-preference
-  → Crea orden "pending" en Supabase
-  → Crea Preference en MercadoPago
-  → Redirige a MercadoPago
-
-Cliente paga en MercadoPago
-  → Webhook: POST /api/payments/webhook
-      → Actualiza orden a status=confirmed, payment_status=paid
-      → Envía email de confirmación al cliente
-  → Redirección: /confirmacion?status=approved&order_id=UUID
-      → Muestra resumen del pedido
-```
-
-## Flujo de etiqueta (cuando Andreani esté configurado)
-
-```
-Admin en /admin/dashboard/ventas
-  → Click "Etiqueta CA" en un pedido
-  → GET /api/admin/orders/{id}/label
-      → Si no tiene tracking: crea orden en Andreani, guarda ca_tracking_code, avanza status a "shipped"
-      → Si ya tiene tracking: descarga la etiqueta existente
-  → Devuelve PDF oficial de Andreani listo para imprimir
-```
+- **Profesionalizar el panel de administrador** — más gráficos, edición de productos, vista de detalle de pedido
+- **Facturador automático** — PDF de factura al confirmar el pago; requiere definir si se usa AFIP o factura simplificada propia
+- **Enlazar Excel con la página** — exportar pedidos a `.xlsx` desde el panel, o importar/actualizar productos desde Excel
+- **Botón "Consultar" feo en mobile** — revisar estilos del hero en `components/Hero.jsx` para viewport < 480px
+- **Emails a spam** — configurar SPF/DKIM o migrar a Resend/SendGrid para mejor entrega
 
 ---
 
@@ -142,7 +156,6 @@ Admin en /admin/dashboard/ventas
 
 | Archivo | Qué hace |
 |---|---|
-| `lib/andreani.js` | Cliente Andreani: auth, crear orden, descargar etiqueta |
 | `lib/mercadopago.js` | Cliente MercadoPago |
 | `lib/shipping-zones.js` | Zonas de envío y función `getShippingCost()` |
 | `lib/email-templates.js` | Template HTML del email de confirmación |
@@ -150,7 +163,6 @@ Admin en /admin/dashboard/ventas
 | `app/api/payments/create-preference/route.js` | Crea la Preference en MP + guarda orden pending |
 | `app/api/payments/webhook/route.js` | Recibe notificación de MP, confirma pago, envía email |
 | `app/api/admin/orders/route.js` | GET todos los pedidos / PATCH cambiar estado |
-| `app/api/admin/orders/[id]/label/route.js` | Genera/descarga etiqueta Andreani |
 | `components/admin/OrdersTable.jsx` | Tabla de pedidos del panel admin |
 | `components/CheckoutSteps.jsx` | Formulario de checkout (2 pasos) |
 | `components/OrderConfirmation.jsx` | Página post-pago |
