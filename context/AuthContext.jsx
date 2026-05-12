@@ -5,6 +5,17 @@ import { createClient } from "../lib/supabase/client"
 
 const AuthContext = createContext()
 
+function translateAuthError(msg) {
+  if (!msg) return "Error desconocido"
+  if (msg.includes("Invalid login credentials")) return "Email o contraseña incorrectos"
+  if (msg.includes("Email not confirmed"))        return "Confirmá tu email antes de ingresar. Revisá tu carpeta de spam."
+  if (msg.includes("User already registered"))    return "Ya existe una cuenta con ese email"
+  if (msg.includes("Password should be"))        return "La contraseña debe tener al menos 6 caracteres"
+  if (msg.includes("rate limit") || msg.includes("too many")) return "Demasiados intentos. Esperá unos minutos e intentá de nuevo."
+  if (msg.includes("network") || msg.includes("fetch"))       return "Error de conexión. Verificá tu internet."
+  return msg
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
@@ -51,49 +62,59 @@ export function AuthProvider({ children }) {
   }, [getClient, loadProfile])
 
   async function login(email, password) {
-    const supabase = getClient()
-    if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { ok: false, error: error.message }
-    setUser(data.user)
-    await loadProfile(supabase, data.user.id)
-    return { ok: true }
+    try {
+      const supabase = getClient()
+      if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) return { ok: false, error: translateAuthError(error.message) }
+      setUser(data.user)
+      await loadProfile(supabase, data.user?.id)
+      return { ok: true }
+    } catch (e) {
+      console.error("[login]", e)
+      return { ok: false, error: "Error de conexión. Intentá de nuevo." }
+    }
   }
 
   async function register({ nombre, apellido, email, password }) {
-    const supabase = getClient()
-    if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
+    try {
+      const supabase = getClient()
+      if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
 
-    const redirectTo = typeof window !== "undefined"
-      ? `${window.location.origin}/auth/callback`
-      : undefined
+      const redirectTo = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback`
+        : undefined
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: { full_name: `${nombre} ${apellido}` },
-      },
-    })
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectTo,
+          data: { full_name: `${nombre} ${apellido}` },
+        },
+      })
 
-    if (error) return { ok: false, error: error.message }
+      if (error) return { ok: false, error: translateAuthError(error.message) }
 
-    // Si no hay sesión → confirmación de email requerida
-    if (!data.session) {
-      return { ok: true, confirmationRequired: true, email }
+      // Si no hay sesión → confirmación de email requerida
+      if (!data.session) {
+        return { ok: true, confirmationRequired: true, email }
+      }
+
+      // Si hay sesión (confirmación deshabilitada) → login automático
+      if (data.user) {
+        await supabase.from("profiles").upsert({
+          user_id:   data.user.id,
+          full_name: `${nombre} ${apellido}`,
+        }, { onConflict: "user_id" })
+        setUser(data.user)
+        await loadProfile(supabase, data.user.id)
+      }
+      return { ok: true, user: data.user }
+    } catch (e) {
+      console.error("[register]", e)
+      return { ok: false, error: "Error de conexión. Intentá de nuevo." }
     }
-
-    // Si hay sesión (confirmación deshabilitada) → login automático
-    if (data.user) {
-      await supabase.from("profiles").upsert({
-        user_id:   data.user.id,
-        full_name: `${nombre} ${apellido}`,
-      }, { onConflict: "user_id" })
-      setUser(data.user)
-      await loadProfile(supabase, data.user.id)
-    }
-    return { ok: true, user: data.user }
   }
 
   async function logout() {
