@@ -4,7 +4,7 @@
  */
 
 const WA_NUMBER  = "5491131451107"
-const WA_MESSAGE = "Hola,como estas? Quisiera hacer una consulta"
+const WA_MESSAGE = "Hola, ¿cómo estás? Quisiera hacer una consulta sobre..."
 const WA_URL     = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)}`
 
 export default function WhatsAppButton() {
