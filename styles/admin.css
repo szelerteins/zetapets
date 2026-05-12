@@ -999,7 +999,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.analytics-metric-icon { font-size: 1.8rem; }
+.analytics-metric-icon { font-size: 1.8rem; display: flex; align-items: center; }
 
 .analytics-metric-value {
   font-size: 1.4rem;

@@ -1,6 +1,7 @@
 "use client"
 
 import { useCart } from "../context/CartContext"
+import { MdOutlineCheckCircle } from "react-icons/md"
 
 export default function Toast() {
   const { toast } = useCart()
@@ -9,7 +10,8 @@ export default function Toast() {
 
   return (
     <div className="toast" role="alert">
-      ✅ {toast}
+      <MdOutlineCheckCircle size={18} />
+      {toast}
     </div>
   )
 }

@@ -51,7 +51,7 @@ function LoginForm() {
         </Link>
 
         <h1 className="auth-title">Iniciar sesión</h1>
-        <p className="auth-sub">Bienvenido de vuelta 👋</p>
+        <p className="auth-sub">Bienvenido de vuelta</p>
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="admin-form-group">
@@ -76,7 +76,7 @@ function LoginForm() {
             {errors.password && <span className="field-error">{errors.password}</span>}
           </div>
 
-          {apiError && <p className="admin-login-error">⚠️ {apiError}</p>}
+          {apiError && <p className="admin-login-error">{apiError}</p>}
 
           <button type="submit" className="admin-login-btn" disabled={loading}>
             {loading ? "Verificando..." : "Ingresar"}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "../../context/AuthContext"
 import { createClient } from "../../lib/supabase/client"
+import { MdOutlineInventory2, MdOutlineLocationOn } from "react-icons/md"
 
 const STATUS_LABEL = {
   pending:   { label: "Pendiente",   color: "#f59e0b" },
@@ -93,7 +94,7 @@ export default function OrdersPage() {
 
           {orders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 0" }}>
-              <p style={{ fontSize: "3rem", marginBottom: 16 }}>📦</p>
+              <MdOutlineInventory2 size={56} style={{ color: "var(--text-light)", margin: "0 auto 16px" }} />
               <p style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: 8 }}>Todavía no hiciste ninguna compra</p>
               <p style={{ color: "var(--text-light)", marginBottom: 24 }}>Explorá nuestro catálogo y encontrá lo que tu mascota necesita.</p>
               <Link href="/productos" className="btn btn-primary">Ver productos</Link>
@@ -133,7 +134,7 @@ export default function OrdersPage() {
                           {(order.order_items ?? []).map((item) => (
                             <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <span style={{ fontSize: "1.2rem" }}>{item.product_emoji ?? "📦"}</span>
+                                <span style={{ fontSize: "1.2rem" }}>{item.product_emoji ?? <MdOutlineInventory2 size={20} />}</span>
                                 <div>
                                   <p style={{ fontWeight: 600, fontSize: "0.88rem" }}>{item.product_name}</p>
                                   {item.variant && <p style={{ fontSize: "0.78rem", color: "var(--text-light)" }}>{item.variant}</p>}
@@ -165,8 +166,9 @@ export default function OrdersPage() {
 
                         {/* Datos de envío */}
                         {order.shipping_address && (
-                          <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--bg)", borderRadius: 8, fontSize: "0.82rem", color: "var(--text-light)" }}>
-                            📍 {order.shipping_name} · {order.shipping_address} (CP {order.shipping_postal_code})
+                          <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--bg)", borderRadius: 8, fontSize: "0.82rem", color: "var(--text-light)", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                            <MdOutlineLocationOn size={14} style={{ flexShrink: 0, marginTop: "1px" }} />
+                            {order.shipping_name} · {order.shipping_address} (CP {order.shipping_postal_code})
                           </div>
                         )}
                       </div>

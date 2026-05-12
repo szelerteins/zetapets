@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "../../context/AuthContext"
 import { registerSchema, parseSchema } from "../../lib/validations"
+import { MdOutlineMarkEmailRead } from "react-icons/md"
 
 export default function RegisterClient() {
   const router = useRouter()
@@ -54,7 +55,7 @@ export default function RegisterClient() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="confirm-email-icon">📬</div>
+          <div className="confirm-email-icon"><MdOutlineMarkEmailRead size={56} style={{ color: "var(--celeste-dark)", margin: "0 auto" }} /></div>
           <h1 className="auth-title">¡Revisá tu email!</h1>
           <p className="auth-sub">
             Te enviamos un link de confirmación a
@@ -80,7 +81,7 @@ export default function RegisterClient() {
         </Link>
 
         <h1 className="auth-title">Crear cuenta</h1>
-        <p className="auth-sub">Es gratis y tarda menos de un minuto 🐾</p>
+        <p className="auth-sub">Es gratis y tarda menos de un minuto</p>
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="auth-grid-2">
@@ -142,7 +143,7 @@ export default function RegisterClient() {
             </div>
           </div>
 
-          {apiError && <p className="admin-login-error">⚠️ {apiError}</p>}
+          {apiError && <p className="admin-login-error">{apiError}</p>}
 
           <button type="submit" className="admin-login-btn" disabled={loading}>
             {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
