@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { MdOutlineEmail, MdOutlinePhone, MdOutlineAccessTime, MdOutlineLocationOn, MdOutlineCheckCircle } from "react-icons/md"
 
 export default function ContactoPage() {
   const [sent, setSent] = useState(false)
@@ -61,7 +62,7 @@ export default function ContactoPage() {
             {/* Info */}
             <div>
               <h2 style={{ fontSize: "1.6rem", fontWeight: 800, marginBottom: "20px" }}>
-                Estamos para ayudarte 🐾
+                Estamos para ayudarte
               </h2>
               <p style={{ color: "var(--text-light)", marginBottom: "32px", lineHeight: 1.7 }}>
                 Si tenés dudas sobre un producto, un pedido o simplemente querés saber más sobre
@@ -69,10 +70,10 @@ export default function ContactoPage() {
               </p>
 
               {[
-                { icon: "📧", label: "Email", value: "zetapets.ar@gmail.com" },
-                { icon: "📱", label: "WhatsApp", value: "+5491131451107" },
-                { icon: "⏰", label: "Horario", value: "Lunes a viernes, 9 a 18 hs" },
-                { icon: "📍", label: "Ubicación", value: "Buenos Aires, Argentina" },
+                { icon: <MdOutlineEmail size={22} />, label: "Email", value: "zetapets.ar@gmail.com" },
+                { icon: <MdOutlinePhone size={22} />, label: "WhatsApp", value: "+5491131451107" },
+                { icon: <MdOutlineAccessTime size={22} />, label: "Horario", value: "Lunes a viernes, 9 a 18 hs" },
+                { icon: <MdOutlineLocationOn size={22} />, label: "Ubicación", value: "Buenos Aires, Argentina" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -83,7 +84,7 @@ export default function ContactoPage() {
                     alignItems: "flex-start",
                   }}
                 >
-                  <span style={{ fontSize: "1.4rem" }}>{item.icon}</span>
+                  <span style={{ color: "var(--celeste-dark)", marginTop: "2px", flexShrink: 0 }}>{item.icon}</span>
                   <div>
                     <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>{item.label}</p>
                     <p style={{ color: "var(--text-light)", fontSize: "0.9rem" }}>{item.value}</p>
@@ -180,7 +181,7 @@ export default function ContactoPage() {
                   textAlign: "center",
                 }}
               >
-                <p style={{ fontSize: "3rem", marginBottom: "16px" }}>✅</p>
+                <MdOutlineCheckCircle size={64} style={{ color: "var(--verde-dark)", margin: "0 auto 16px" }} />
                 <h3 style={{ fontWeight: 700, marginBottom: "8px" }}>¡Mensaje enviado!</h3>
                 <p style={{ color: "var(--text-light)" }}>
                   Gracias {form.nombre}, te respondemos a la brevedad.
@@ -248,7 +249,7 @@ export default function ContactoPage() {
                 </div>
                 {error && (
                   <p style={{ color: "#ef4444", fontSize: "0.88rem", marginBottom: "8px", fontWeight: 500 }}>
-                    ⚠️ {error}
+                    {error}
                   </p>
                 )}
                 <button

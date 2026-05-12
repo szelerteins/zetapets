@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useCart } from "../context/CartContext"
 import CartItem from "./CartItem"
 import { FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
+import { MdOutlineShoppingCart, MdClose } from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -18,15 +19,15 @@ export default function CartDrawer() {
 
       <aside className="cart-drawer">
         <div className="cart-header">
-          <h2>🛒 Mi carrito ({totalItems})</h2>
-          <button className="close-btn" onClick={() => setIsCartOpen(false)}>
-            ✕
+          <h2>Mi carrito ({totalItems})</h2>
+          <button className="close-btn" onClick={() => setIsCartOpen(false)} aria-label="Cerrar carrito">
+            <MdClose size={20} />
           </button>
         </div>
 
         {cart.length === 0 ? (
           <div className="cart-empty">
-            <span className="cart-empty-icon">🛒</span>
+            <span className="cart-empty-icon"><MdOutlineShoppingCart size={48} /></span>
             <p style={{ fontWeight: 600 }}>Tu carrito está vacío</p>
             <p style={{ fontSize: "0.87rem" }}>Agregá productos para empezar</p>
             <Link
@@ -54,7 +55,7 @@ export default function CartDrawer() {
                 <div className="cart-summary-row">
                   <span>Envío</span>
                   <span style={{ color: "var(--verde-dark)", fontWeight: 600 }}>
-                    {totalPrice >= FREE_SHIPPING_THRESHOLD ? "Gratis 🎉" : "Según tu CP"}
+                    {totalPrice >= FREE_SHIPPING_THRESHOLD ? "Gratis" : "Según tu CP"}
                   </span>
                 </div>
               </div>

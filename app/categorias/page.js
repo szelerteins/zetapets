@@ -7,6 +7,7 @@ import Link from "next/link"
 import { categories } from "../../data/categories"
 import { products } from "../../data/products"
 import ProductGrid from "../../components/ProductGrid"
+import { MdOutlineInventory2 } from "react-icons/md"
 
 function CategoriasContent() {
   const searchParams = useSearchParams()
@@ -50,7 +51,7 @@ function CategoriasContent() {
           marginBottom: "28px",
           fontWeight: 500,
         }}>
-          Tocá una categoría para ver sus productos 👇
+          Tocá una categoría para ver sus productos
         </p>
 
         {/* ── Grid de categorías con fotos ─────────────────────────── */}
@@ -127,7 +128,7 @@ function CategoriasContent() {
               <ProductGrid products={filtered} />
             ) : (
               <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-light)" }}>
-                <p style={{ fontSize: "2.5rem", marginBottom: "12px" }}>📦</p>
+                <MdOutlineInventory2 size={56} style={{ color: "var(--text-light)", marginBottom: "12px" }} />
                 <p style={{ fontWeight: 600 }}>No hay productos en esta categoría todavía</p>
                 <p style={{ fontSize: "0.9rem", marginTop: "8px" }}>
                   Estamos trabajando para agregar más productos pronto.

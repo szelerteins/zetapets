@@ -3,6 +3,15 @@
 import { useState } from "react"
 import { useCart } from "../context/CartContext"
 import { getShippingCost, PICKUP_INFO, FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
+import {
+  MdOutlineLocalShipping,
+  MdOutlineStorefront,
+  MdOutlineLocationOn,
+  MdOutlineInventory2,
+  MdOutlineLock,
+  MdOutlineShoppingCart,
+  MdOutlineWarningAmber,
+} from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -79,7 +88,7 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
             cursor: "pointer", textAlign: "left", transition: "all 0.15s",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.9rem" }}>🚚 Envío a domicilio</p>
+          <p style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}><MdOutlineLocalShipping size={16} /> Envío a domicilio</p>
           <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
             Calculado según tu CP
           </p>
@@ -94,7 +103,7 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
             cursor: "pointer", textAlign: "left", transition: "all 0.15s",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.9rem" }}>🏪 Retiro en local</p>
+          <p style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}><MdOutlineStorefront size={16} /> Retiro en local</p>
           <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "#16a34a", fontWeight: 600 }}>
             Gratis · Villa Crespo, CABA
           </p>
@@ -116,9 +125,9 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
             {field("codigoPostal", "Código postal *", "text", "C1043")}
           </div>
           {data.codigoPostal.trim() && (
-            <p style={{ fontSize: "0.84rem", color: "var(--celeste-dark)", marginTop: "4px" }}>
-              📦 Costo de envío:{" "}
-              <strong>{shippingCost === 0 ? "Gratis 🎉" : formatPrice(shippingCost)}</strong>
+            <p style={{ fontSize: "0.84rem", color: "var(--celeste-dark)", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <MdOutlineInventory2 size={14} /> Costo de envío:{" "}
+              <strong>{shippingCost === 0 ? "Gratis" : formatPrice(shippingCost)}</strong>
             </p>
           )}
         </>
@@ -126,9 +135,9 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
 
       {isPickup && (
         <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "14px 16px", marginTop: "4px" }}>
-          <p style={{ margin: 0, fontSize: "0.88rem", color: "#166534" }}>
-            📍 <strong>Villa Crespo, CABA</strong><br />
-            <span style={{ fontSize: "0.82rem", color: "#15803d" }}>{PICKUP_INFO.note}</span>
+          <p style={{ margin: 0, fontSize: "0.88rem", color: "#166534", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+            <MdOutlineLocationOn size={16} style={{ flexShrink: 0, marginTop: "2px" }} /> <span><strong>Villa Crespo, CABA</strong><br />
+            <span style={{ fontSize: "0.82rem", color: "#15803d" }}>{PICKUP_INFO.note}</span></span>
           </p>
         </div>
       )}
@@ -153,7 +162,7 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
       <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "16px 20px", marginBottom: "20px", fontSize: "0.9rem", lineHeight: 1.7 }}>
         {isPickup ? (
           <>
-            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1e293b" }}>🏪 Retiro en local</p>
+            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}><MdOutlineStorefront size={16} /> Retiro en local</p>
             <p style={{ margin: 0, color: "#475569" }}>
               {data.nombre} {data.apellido}<br />
               Villa Crespo, CABA · Tel: {data.telefono}<br />
@@ -162,7 +171,7 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
           </>
         ) : (
           <>
-            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1e293b" }}>📍 Envío a:</p>
+            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}><MdOutlineLocationOn size={16} /> Envío a:</p>
             <p style={{ margin: 0, color: "#475569" }}>
               {data.nombre} {data.apellido}<br />
               {data.direccion}, {data.ciudad}<br />
@@ -180,7 +189,7 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
         <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", color: "#64748b" }}>
           <span>{isPickup ? "Retiro en local" : "Envío"}</span>
           <span style={{ color: "var(--verde-dark)", fontWeight: 700 }}>
-            {shippingCost === 0 ? "Gratis 🎉" : formatPrice(shippingCost)}
+            {shippingCost === 0 ? "Gratis" : formatPrice(shippingCost)}
           </span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 6px", fontWeight: 700, fontSize: "1.05rem", borderTop: "2px solid #e2e8f0" }}>
@@ -189,9 +198,10 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
         </div>
       </div>
 
-      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px", fontSize: "0.83rem", color: "#78350f" }}>
-        🔒 Serás redirigido a <strong>Mercado Pago</strong> para completar el pago de forma segura.
-        Aceptamos tarjetas, transferencia y saldo de MP.
+      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px", fontSize: "0.83rem", color: "#78350f", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+        <MdOutlineLock size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
+        <span>Serás redirigido a <strong>Mercado Pago</strong> para completar el pago de forma segura.
+        Aceptamos tarjetas, transferencia y saldo de MP.</span>
       </div>
 
       <div className="checkout-actions">
@@ -202,7 +212,7 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
           disabled={loading}
           style={{ flex: 1 }}
         >
-          {loading ? "Generando link..." : "🟦 Pagar con Mercado Pago"}
+          {loading ? "Generando link..." : "Pagar con Mercado Pago"}
         </button>
       </div>
     </div>
@@ -257,7 +267,7 @@ export default function CheckoutSteps() {
   if (cart.length === 0 && step === 1) {
     return (
       <div style={{ textAlign: "center", padding: "60px 0" }}>
-        <p style={{ fontSize: "3rem" }}>🛒</p>
+        <MdOutlineShoppingCart size={56} style={{ color: "var(--text-light)", margin: "0 auto" }} />
         <p style={{ fontWeight: 700, marginTop: "12px" }}>Tu carrito está vacío</p>
       </div>
     )
@@ -268,8 +278,9 @@ export default function CheckoutSteps() {
       <StepIndicator step={step} />
 
       {error && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", color: "#dc2626", fontSize: "0.9rem" }}>
-          ⚠️ {error}
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", color: "#dc2626", fontSize: "0.9rem", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+          <MdOutlineWarningAmber size={18} style={{ flexShrink: 0, marginTop: "1px" }} />
+          <span>{error}</span>
         </div>
       )}
 

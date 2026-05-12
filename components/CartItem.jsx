@@ -1,6 +1,7 @@
 "use client"
 
 import { useCart } from "../context/CartContext"
+import { MdOutlineDeleteOutline } from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -42,7 +43,7 @@ export default function CartItem({ item }) {
           onClick={() => removeFromCart(item.cartKey)}
           aria-label="Eliminar"
         >
-          🗑
+          <MdOutlineDeleteOutline size={20} />
         </button>
       </div>
     </div>

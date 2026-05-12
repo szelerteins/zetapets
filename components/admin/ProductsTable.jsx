@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { MdOutlinePause, MdOutlinePlayArrow } from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + Math.round(n).toLocaleString("es-AR")
@@ -85,7 +86,7 @@ export default function ProductsTable() {
                         disabled={toggling === p.id}
                         onClick={() => toggleActive(p.id, p.is_active)}
                       >
-                        {p.is_active ? "⏸️" : "▶️"}
+                        {p.is_active ? <MdOutlinePause size={16} /> : <MdOutlinePlayArrow size={16} />}
                       </button>
                     </div>
                   </td>

@@ -2,6 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
+import {
+  MdOutlineWarningAmber,
+  MdOutlineRemoveRedEye,
+  MdOutlineMouse,
+  MdOutlineTrendingDown,
+  MdOutlinePersonAddAlt,
+  MdOutlineTimer,
+  MdOutlineArticle,
+  MdOutlinePersonAdd,
+  MdOutlineRepeat,
+  MdOutlineAdsClick,
+} from "react-icons/md"
 
 const RANGES = [
   { key: "1d",   label: "Hoy" },
@@ -57,7 +69,7 @@ export default function AnalyticsPanel() {
 
       {!loading && !data && (
         <div className="analytics-banner analytics-banner--warning">
-          <span>⚠️</span>
+          <MdOutlineWarningAmber size={18} style={{ flexShrink: 0 }} />
           <span>No se pudieron cargar los datos. Verificá que <strong>SUPABASE_SERVICE_ROLE_KEY</strong> esté configurado y hayas corrido la migración <code>005_analytics_enhanced.sql</code> en Supabase.</span>
         </div>
       )}
@@ -67,42 +79,42 @@ export default function AnalyticsPanel() {
           {/* Métricas principales */}
           <div className="analytics-metrics analytics-metrics--6">
             <div className="analytics-metric">
-              <span className="analytics-metric-icon">👁️</span>
+              <span className="analytics-metric-icon"><MdOutlineRemoveRedEye size={24} /></span>
               <div>
                 <p className="analytics-metric-value">{data.totalViews.toLocaleString("es-AR")}</p>
                 <p className="analytics-metric-label">Vistas de página</p>
               </div>
             </div>
             <div className="analytics-metric">
-              <span className="analytics-metric-icon">🖱️</span>
+              <span className="analytics-metric-icon"><MdOutlineMouse size={24} /></span>
               <div>
                 <p className="analytics-metric-value">{data.totalClicks.toLocaleString("es-AR")}</p>
                 <p className="analytics-metric-label">Clicks totales</p>
               </div>
             </div>
             <div className="analytics-metric">
-              <span className="analytics-metric-icon">↩️</span>
+              <span className="analytics-metric-icon"><MdOutlineTrendingDown size={24} /></span>
               <div>
                 <p className="analytics-metric-value">{data.bounceRate}%</p>
                 <p className="analytics-metric-label">Tasa de rebote</p>
               </div>
             </div>
             <div className="analytics-metric">
-              <span className="analytics-metric-icon">🆕</span>
+              <span className="analytics-metric-icon"><MdOutlinePersonAddAlt size={24} /></span>
               <div>
                 <p className="analytics-metric-value">{data.newVisitors.toLocaleString("es-AR")}</p>
                 <p className="analytics-metric-label">Usuarios nuevos</p>
               </div>
             </div>
             <div className="analytics-metric">
-              <span className="analytics-metric-icon">⏱️</span>
+              <span className="analytics-metric-icon"><MdOutlineTimer size={24} /></span>
               <div>
                 <p className="analytics-metric-value">{fmtTime(data.avgTimeOnSite)}</p>
                 <p className="analytics-metric-label">Tiempo promedio</p>
               </div>
             </div>
             <div className="analytics-metric">
-              <span className="analytics-metric-icon">📜</span>
+              <span className="analytics-metric-icon"><MdOutlineArticle size={24} /></span>
               <div>
                 <p className="analytics-metric-value">{data.avgScrollDepth > 0 ? `${data.avgScrollDepth}%` : "—"}</p>
                 <p className="analytics-metric-label">Scroll depth</p>
@@ -179,7 +191,7 @@ export default function AnalyticsPanel() {
               <div style={{ marginTop:20, paddingTop:16, borderTop:"1px solid #F3F4F6" }}>
                 <p style={{ fontSize:"0.82rem", color:"#6B7280", marginBottom:8 }}>Nuevos vs. recurrentes</p>
                 <div className="traffic-row">
-                  <span className="traffic-source">🆕 Nuevos</span>
+                  <span className="traffic-source" style={{ display: "flex", alignItems: "center", gap: "4px" }}><MdOutlinePersonAdd size={14} /> Nuevos</span>
                   <div className="traffic-bar-wrap">
                     <div className="traffic-bar" style={{ width: data.totalViews > 0 ? `${Math.round(data.newVisitors/data.totalViews*100)}%` : "0%", background:"#7AC74F" }} />
                   </div>
@@ -187,7 +199,7 @@ export default function AnalyticsPanel() {
                   <span className="traffic-visits">{data.newVisitors}</span>
                 </div>
                 <div className="traffic-row">
-                  <span className="traffic-source">🔄 Recurrentes</span>
+                  <span className="traffic-source" style={{ display: "flex", alignItems: "center", gap: "4px" }}><MdOutlineRepeat size={14} /> Recurrentes</span>
                   <div className="traffic-bar-wrap">
                     <div className="traffic-bar" style={{ width: data.totalViews > 0 ? `${Math.round(data.returningVisitors/data.totalViews*100)}%` : "0%", background:"#5BC0EB" }} />
                   </div>
@@ -222,7 +234,7 @@ export default function AnalyticsPanel() {
           {/* Click Heatmap */}
           <div className="analytics-grid">
             <div className="admin-chart-card">
-              <h3 className="admin-chart-title">🖱️ Click Heatmap</h3>
+              <h3 className="admin-chart-title" style={{ display: "flex", alignItems: "center", gap: "6px" }}><MdOutlineAdsClick size={18} /> Click Heatmap</h3>
               <p style={{ fontSize:"0.78rem", color:"#9CA3AF", marginBottom:12 }}>Distribución de clicks en el viewport</p>
               {data.totalClicks === 0 ? (
                 <div style={{ textAlign:"center", padding:"24px 0", color:"#9CA3AF" }}>Sin clicks registrados aún</div>

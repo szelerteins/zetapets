@@ -4,17 +4,19 @@ import { useState, useEffect } from "react"
 import AdminLayout from "../../../components/admin/AdminLayout"
 import MetricCard from "../../../components/admin/MetricCard"
 import { SalesLineChart, OrderStatusChart } from "../../../components/admin/SalesChart"
+import {
+  MdOutlineAttachMoney,
+  MdOutlineListAlt,
+  MdOutlineLocalOffer,
+  MdOutlinePeopleAlt,
+  MdOutlineHourglassFull,
+  MdOutlineLocalShipping,
+  MdOutlineCheckCircle,
+  MdOutlineEmojiEvents,
+} from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + Math.round(n).toLocaleString("es-AR")
-}
-
-const statusLabels = {
-  pending: "Pendiente",
-  confirmed: "Confirmado",
-  shipped: "Enviado",
-  delivered: "Entregado",
-  cancelled: "Cancelado",
 }
 
 export default function DashboardPage() {
@@ -39,21 +41,21 @@ export default function DashboardPage() {
   return (
     <AdminLayout title="Dashboard">
       <div className="metrics-grid">
-        <MetricCard icon="💰" label="Facturación total" color="verde"
+        <MetricCard icon={<MdOutlineAttachMoney size={24} />} label="Facturación total" color="verde"
           value={stats ? formatPrice(stats.totalRevenue) : "—"} sub="Pedidos activos" />
-        <MetricCard icon="📋" label="Pedidos totales" color="purple"
+        <MetricCard icon={<MdOutlineListAlt size={24} />} label="Pedidos totales" color="purple"
           value={stats?.totalOrders ?? "—"} sub="Todos los estados" />
-        <MetricCard icon="🎯" label="Ticket promedio" color="orange"
+        <MetricCard icon={<MdOutlineLocalOffer size={24} />} label="Ticket promedio" color="orange"
           value={stats ? formatPrice(stats.avgTicket) : "—"} sub="Por compra" />
-        <MetricCard icon="👥" label="Clientes registrados" color="celeste"
+        <MetricCard icon={<MdOutlinePeopleAlt size={24} />} label="Clientes registrados" color="celeste"
           value={stats?.registeredClients ?? "—"} sub="Con perfil creado" />
-        <MetricCard icon="⏳" label="Pendientes" color="orange"
+        <MetricCard icon={<MdOutlineHourglassFull size={24} />} label="Pendientes" color="orange"
           value={stats?.statusCounts?.pending ?? "—"} sub="Esperando confirmación" />
-        <MetricCard icon="🚚" label="Enviados" color="celeste"
+        <MetricCard icon={<MdOutlineLocalShipping size={24} />} label="Enviados" color="celeste"
           value={stats?.statusCounts?.shipped ?? "—"} sub="En camino" />
-        <MetricCard icon="✅" label="Entregados" color="verde"
+        <MetricCard icon={<MdOutlineCheckCircle size={24} />} label="Entregados" color="verde"
           value={stats?.statusCounts?.delivered ?? "—"} sub="Completados" />
-        <MetricCard icon="🏆" label="Producto más vendido" color="purple"
+        <MetricCard icon={<MdOutlineEmojiEvents size={24} />} label="Producto más vendido" color="purple"
           value="" sub={stats?.topProduct ?? "—"} />
       </div>
 

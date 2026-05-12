@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { jsPDF } from "jspdf"
+import { MdOutlinePictureAsPdf } from "react-icons/md"
 
 function downloadShippingLabel(order) {
   const doc = new jsPDF({ unit: "mm", format: [100, 150] })
@@ -266,7 +267,7 @@ export default function OrdersTable() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      📦 PDF
+                      <MdOutlinePictureAsPdf size={14} style={{ marginRight: 4 }} /> PDF
                     </button>
                   </td>
                 </tr>

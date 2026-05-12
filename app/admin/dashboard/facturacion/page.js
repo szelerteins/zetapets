@@ -60,7 +60,7 @@ export default function FacturacionPage() {
             <p className="billing-card-value">{orders.length}</p>
             <div className="billing-status-row">
               <span className="admin-badge badge-green">✓ {pagados} Entregados</span>
-              <span className="admin-badge badge-yellow">⏳ {pendientes} Pendientes</span>
+              <span className="admin-badge badge-yellow">{pendientes} Pendientes</span>
               <span className="admin-badge badge-red">✕ {cancelados} Cancelados</span>
             </div>
           </div>

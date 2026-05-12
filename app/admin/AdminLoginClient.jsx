@@ -72,14 +72,14 @@ export default function AdminLoginClient() {
             />
           </div>
 
-          {error && <p className="admin-login-error">⚠️ {error}</p>}
+          {error && <p className="admin-login-error">{error}</p>}
 
           <button type="submit" className="admin-login-btn" disabled={loading}>
             {loading ? "Verificando..." : "Ingresar al panel"}
           </button>
         </form>
 
-        <p className="admin-login-note">🔒 Sesión expira en 24 horas.</p>
+        <p className="admin-login-note">Sesión expira en 24 horas.</p>
       </div>
     </div>
   )

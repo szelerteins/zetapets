@@ -138,8 +138,8 @@ export default function AccountPage() {
                 <input value={form.city} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} placeholder="Buenos Aires" />
               </div>
 
-              {error && <p style={{ color: "#ef4444", fontSize: "0.88rem" }}>⚠️ {error}</p>}
-              {saved && <p style={{ color: "var(--verde)", fontSize: "0.88rem", fontWeight: 600 }}>✅ Perfil guardado correctamente</p>}
+              {error && <p style={{ color: "#ef4444", fontSize: "0.88rem" }}>{error}</p>}
+              {saved && <p style={{ color: "var(--verde)", fontSize: "0.88rem", fontWeight: 600 }}>Perfil guardado correctamente</p>}
 
               <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
                 <button type="submit" className="btn btn-primary" disabled={saving} style={{ opacity: saving ? 0.7 : 1 }}>

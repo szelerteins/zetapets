@@ -22,7 +22,7 @@ export default function CheckoutSummary() {
       <div className="summary-line">
         <span>Envío</span>
         <span style={{ color: totalPrice >= FREE_SHIPPING_THRESHOLD ? "var(--verde-dark)" : "inherit", fontWeight: totalPrice >= FREE_SHIPPING_THRESHOLD ? 700 : 400 }}>
-          {totalPrice >= FREE_SHIPPING_THRESHOLD ? "Gratis 🎉" : "Según tu CP"}
+          {totalPrice >= FREE_SHIPPING_THRESHOLD ? "Gratis" : "Según tu CP"}
         </span>
       </div>
 
@@ -36,7 +36,7 @@ export default function CheckoutSummary() {
 
       {totalPrice < FREE_SHIPPING_THRESHOLD && (
         <p style={{ marginTop: "12px", fontSize: "0.82rem", color: "var(--celeste-dark)", textAlign: "center" }}>
-          Agregá {formatPrice(FREE_SHIPPING_THRESHOLD - totalPrice)} más para envío gratis 🎁
+          Agregá {formatPrice(FREE_SHIPPING_THRESHOLD - totalPrice)} más para envío gratis
         </p>
       )}
     </div>

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useCart } from "../../context/CartContext"
 import CheckoutSummary from "../../components/CheckoutSummary"
+import { MdOutlineShoppingCart, MdOutlineDeleteOutline } from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -22,7 +23,7 @@ export default function CarritoPage() {
         <div className="container">
           {cart.length === 0 ? (
             <div style={{ textAlign: "center", padding: "80px 0" }}>
-              <p style={{ fontSize: "3rem", marginBottom: "16px" }}>🛒</p>
+              <MdOutlineShoppingCart size={64} style={{ color: "var(--text-light)", margin: "0 auto 16px" }} />
               <h2 style={{ marginBottom: "12px" }}>Tu carrito está vacío</h2>
               <p style={{ color: "var(--text-light)", marginBottom: "28px" }}>
                 Explorá nuestros productos y encontrá algo para tu mascota
@@ -82,7 +83,7 @@ export default function CarritoPage() {
                         onClick={() => removeFromCart(item.cartKey)}
                         aria-label="Eliminar"
                       >
-                        🗑
+                        <MdOutlineDeleteOutline size={20} />
                       </button>
                     </div>
                   </article>

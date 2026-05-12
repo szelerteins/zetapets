@@ -215,7 +215,10 @@
 .admin-nav-icon {
   font-size: 1.1rem;
   width: 22px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .admin-logout-btn {
@@ -386,7 +389,7 @@
   justify-content: space-between;
 }
 
-.metric-icon { font-size: 1.6rem; }
+.metric-icon { font-size: 1.6rem; display: flex; align-items: center; }
 
 .metric-trend {
   font-size: 0.75rem;
@@ -996,7 +999,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.analytics-metric-icon { font-size: 1.8rem; }
+.analytics-metric-icon { font-size: 1.8rem; display: flex; align-items: center; }
 
 .analytics-metric-value {
   font-size: 1.4rem;
