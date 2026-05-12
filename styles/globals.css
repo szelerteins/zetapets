@@ -2006,6 +2006,16 @@ img { max-width: 100%; display: block; }
   .form-row { grid-template-columns: 1fr; }
   .order-info-grid { grid-template-columns: 1fr; }
   .header-cta { display: none; }
+
+  .hero-ctas {
+    flex-direction: column;
+    width: 100%;
+  }
+  .hero-ctas .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
 }
 
 /* =====================
