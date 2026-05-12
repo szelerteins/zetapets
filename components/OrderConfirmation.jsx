@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import {
+  MdOutlineHourglassFull,
+  MdOutlineCancel,
+  MdOutlineCheckCircle,
+  MdOutlineStorefront,
+  MdOutlineLocalShipping,
+  MdOutlineMarkEmailUnread,
+} from "react-icons/md"
 
 function formatPrice(n) {
   return "$" + Number(n).toLocaleString("es-AR")
@@ -33,7 +41,7 @@ export default function OrderConfirmation() {
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "80px 0" }}>
-        <p style={{ fontSize: "2rem" }}>⏳</p>
+        <MdOutlineHourglassFull size={48} style={{ color: "#94a3b8", margin: "0 auto" }} />
         <p style={{ color: "#64748b", marginTop: "12px" }}>Cargando tu pedido…</p>
       </div>
     )
@@ -42,7 +50,7 @@ export default function OrderConfirmation() {
   if (status === "failure") {
     return (
       <div style={{ maxWidth: "520px", margin: "60px auto", textAlign: "center" }}>
-        <p style={{ fontSize: "3.5rem" }}>❌</p>
+        <MdOutlineCancel size={64} style={{ color: "#dc2626", margin: "0 auto" }} />
         <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#dc2626", margin: "16px 0 8px" }}>
           El pago no fue procesado
         </h1>
@@ -57,7 +65,7 @@ export default function OrderConfirmation() {
   if (status === "pending") {
     return (
       <div style={{ maxWidth: "520px", margin: "60px auto", textAlign: "center" }}>
-        <p style={{ fontSize: "3.5rem" }}>⏳</p>
+        <MdOutlineHourglassFull size={64} style={{ color: "#d97706", margin: "0 auto" }} />
         <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#d97706", margin: "16px 0 8px" }}>
           Pago pendiente de acreditación
         </h1>
@@ -79,12 +87,30 @@ export default function OrderConfirmation() {
   // approved
   return (
     <div style={{ maxWidth: "560px", margin: "48px auto" }}>
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
-        <p style={{ fontSize: "3.5rem" }}>✅</p>
+      <div style={{ textAlign: "center", marginBottom: "24px" }}>
+        <MdOutlineCheckCircle size={64} style={{ color: "#16a34a", margin: "0 auto" }} />
         <h1 style={{ fontSize: "1.7rem", fontWeight: 800, color: "#16a34a", margin: "12px 0 8px" }}>
           ¡Compra confirmada!
         </h1>
         <p style={{ color: "#475569" }}>Gracias por tu compra. Te enviamos los detalles por email.</p>
+      </div>
+
+      {/* Aviso spam */}
+      <div style={{
+        background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "10px",
+        padding: "14px 18px", marginBottom: "24px", display: "flex",
+        alignItems: "flex-start", gap: "12px",
+      }}>
+        <MdOutlineMarkEmailUnread size={22} style={{ color: "#b45309", flexShrink: 0, marginTop: "2px" }} />
+        <div>
+          <p style={{ margin: 0, fontWeight: 700, color: "#92400e", fontSize: "0.9rem" }}>
+            Revisá tu correo
+          </p>
+          <p style={{ margin: "4px 0 0", color: "#78350f", fontSize: "0.85rem", lineHeight: 1.5 }}>
+            Si no encontrás el mail de confirmación en tu bandeja de entrada, revisá la carpeta de{" "}
+            <strong>correo no deseado o spam</strong>.
+          </p>
+        </div>
       </div>
 
       {order && (
@@ -130,12 +156,18 @@ export default function OrderConfirmation() {
       }}>
         {order?.delivery_method === "pickup" ? (
           <>
-            <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#166534" }}>🏪 Retiro en local — Villa Crespo, CABA</p>
+            <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#166534", display: "flex", alignItems: "center", gap: "8px" }}>
+              <MdOutlineStorefront size={18} style={{ flexShrink: 0 }} />
+              Retiro en local — Villa Crespo, CABA
+            </p>
             <p style={{ margin: 0, color: "#15803d" }}>Te vamos a confirmar la dirección exacta por email.</p>
           </>
         ) : (
           <>
-            <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#1d4ed8" }}>📦 Tu pedido será enviado a:</p>
+            <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+              <MdOutlineLocalShipping size={18} style={{ flexShrink: 0 }} />
+              Tu pedido será enviado a:
+            </p>
             <p style={{ margin: 0, color: "#334155" }}>
               {order?.shipping_name}<br />
               {order?.shipping_address}{order?.shipping_city ? `, ${order.shipping_city}` : ""}<br />
