@@ -216,7 +216,8 @@ export default function OrdersTable() {
                   <td><code className="order-id">{order.order_number}</code></td>
                   <td>
                     <div className="client-cell">
-                      <strong>{order.profiles?.full_name || "—"}</strong>
+                      <strong>{order.shipping_name || "—"}</strong>
+                      {order.shipping_email && <div style={{fontSize:"0.78rem",color:"#64748b"}}>{order.shipping_email}</div>}
                     </div>
                   </td>
                   <td>{new Date(order.created_at).toLocaleDateString("es-AR")}</td>

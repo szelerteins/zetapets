@@ -17,7 +17,7 @@ export async function GET() {
     .select(`
       id, order_number, status, subtotal, total, payment_method, payment_status, created_at,
       shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, shipping_email,
-      profiles ( full_name, phone ),
+      delivery_method,
       order_items ( product_name, product_emoji, quantity, unit_price, total_price, variant )
     `)
     .order("created_at", { ascending: false })
