@@ -215,7 +215,10 @@
 .admin-nav-icon {
   font-size: 1.1rem;
   width: 22px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .admin-logout-btn {
@@ -386,7 +389,7 @@
   justify-content: space-between;
 }
 
-.metric-icon { font-size: 1.6rem; }
+.metric-icon { font-size: 1.6rem; display: flex; align-items: center; }
 
 .metric-trend {
   font-size: 0.75rem;

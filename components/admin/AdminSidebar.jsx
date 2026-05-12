@@ -2,15 +2,25 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import {
+  MdOutlineDashboard,
+  MdOutlineInsights,
+  MdOutlineShoppingCart,
+  MdOutlineReceipt,
+  MdOutlineInventory2,
+  MdOutlinePeopleAlt,
+  MdOutlineSettings,
+  MdOutlineLogout,
+} from "react-icons/md"
 
 const navItems = [
-  { href: "/admin/dashboard",              label: "Dashboard",    icon: "📊" },
-  { href: "/admin/dashboard/analytics",    label: "Analytics",    icon: "📈" },
-  { href: "/admin/dashboard/ventas",       label: "Ventas",       icon: "🛒" },
-  { href: "/admin/dashboard/facturacion",  label: "Facturación",  icon: "🧾" },
-  { href: "/admin/dashboard/productos",    label: "Productos",    icon: "📦" },
-  { href: "/admin/dashboard/clientes",     label: "Clientes",     icon: "👥" },
-  { href: "/admin/dashboard/configuracion",label: "Configuración",icon: "⚙️" },
+  { href: "/admin/dashboard",               label: "Dashboard",     icon: <MdOutlineDashboard size={18} /> },
+  { href: "/admin/dashboard/analytics",     label: "Analytics",     icon: <MdOutlineInsights size={18} /> },
+  { href: "/admin/dashboard/ventas",        label: "Ventas",        icon: <MdOutlineShoppingCart size={18} /> },
+  { href: "/admin/dashboard/facturacion",   label: "Facturación",   icon: <MdOutlineReceipt size={18} /> },
+  { href: "/admin/dashboard/productos",     label: "Productos",     icon: <MdOutlineInventory2 size={18} /> },
+  { href: "/admin/dashboard/clientes",      label: "Clientes",      icon: <MdOutlinePeopleAlt size={18} /> },
+  { href: "/admin/dashboard/configuracion", label: "Configuración", icon: <MdOutlineSettings size={18} /> },
 ]
 
 export default function AdminSidebar({ onClose, isOpen }) {
@@ -22,7 +32,7 @@ export default function AdminSidebar({ onClose, isOpen }) {
     } catch {
       // Si falla la llamada, igual redirigir
     }
-    localStorage.removeItem("zetapets-admin") // limpiar por si quedó algo del sistema viejo
+    localStorage.removeItem("zetapets-admin")
     window.location.href = "/login"
   }
 
@@ -51,7 +61,7 @@ export default function AdminSidebar({ onClose, isOpen }) {
       </nav>
 
       <button className="admin-logout-btn" onClick={handleLogout}>
-        <span>🚪</span>
+        <MdOutlineLogout size={16} />
         <span>Cerrar sesión</span>
       </button>
     </aside>
