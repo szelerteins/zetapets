@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createAdminClient } from "../../../../../lib/supabase/admin"
-import { createShipment, downloadLabel } from "../../../../../lib/correo-argentino"
+import { createShipment, downloadLabel } from "../../../../../lib/andreani"
 
 async function checkAdmin() {
   const cookieStore = await cookies()
@@ -17,7 +17,6 @@ export async function GET(request, { params }) {
   const supabase = createAdminClient()
   if (!supabase) return NextResponse.json({ error: "Supabase no configurado" }, { status: 503 })
 
-  // Traer la orden con todos los campos necesarios para la etiqueta
   const { data: order, error } = await supabase
     .from("orders")
     .select(`
@@ -34,53 +33,49 @@ export async function GET(request, { params }) {
   }
 
   if (order.delivery_method === "pickup") {
-    return NextResponse.json({ error: "Los pedidos de retiro en local no tienen etiqueta de envío" }, { status: 400 })
+    return NextResponse.json(
+      { error: "Los pedidos de retiro en local no tienen etiqueta de envío" },
+      { status: 400 }
+    )
   }
 
   try {
     let trackingCode = order.ca_tracking_code
-    let labelBuffer
 
-    if (trackingCode) {
-      // Ya fue registrado en CA — solo descargar la etiqueta existente
-      labelBuffer = await downloadLabel(trackingCode)
-    } else {
-      // Primera vez — registrar el envío en CA, guardar el tracking code
-      const { trackingCode: newCode, labelUrl } = await createShipment(order)
-      trackingCode = newCode
+    if (!trackingCode) {
+      // Primera vez: registrar el envío en Andreani y guardar el tracking
+      const result = await createShipment(order)
+      trackingCode = result.trackingCode
 
-      // Persistir el tracking en la base de datos
       await supabase
         .from("orders")
         .update({
           ca_tracking_code: trackingCode,
-          ca_shipment_at: new Date().toISOString(),
-          status: order.status === "confirmed" ? "shipped" : order.status,
+          ca_shipment_at:   new Date().toISOString(),
+          status:           order.status === "confirmed" ? "shipped" : order.status,
         })
         .eq("id", id)
-
-      if (labelUrl) {
-        // Algunos planes de CA incluyen la URL directa de la etiqueta
-        const pdfRes = await fetch(labelUrl)
-        labelBuffer = await pdfRes.arrayBuffer()
-      } else {
-        labelBuffer = await downloadLabel(trackingCode)
-      }
     }
+
+    const labelBuffer = await downloadLabel(trackingCode)
 
     return new NextResponse(labelBuffer, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="etiqueta-CA-${order.order_number}.pdf"`,
+        "Content-Type":        "application/pdf",
+        "Content-Disposition": `attachment; filename="etiqueta-${order.order_number}.pdf"`,
       },
     })
   } catch (err) {
-    console.error("[CA label]", err.message)
+    console.error("[Andreani label]", err.message)
 
-    // Correo Argentino no configurado → mensaje claro para el admin
     if (err.message.includes("no configurado")) {
       return NextResponse.json(
-        { error: "Correo Argentino no está configurado aún. Completá las variables CA_USUARIO, CA_CLAVE y CA_NUMERO_CLIENTE en el panel de Vercel." },
+        {
+          error:
+            "Andreani no está configurado. Completá las variables ANDREANI_USUARIO, " +
+            "ANDREANI_CONTRASENA y ANDREANI_CONTRATO en Vercel. " +
+            "Para obtener credenciales, contactar a apis@andreani.com",
+        },
         { status: 503 }
       )
     }
