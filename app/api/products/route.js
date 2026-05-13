@@ -1,17 +1,15 @@
 /**
  * GET /api/products
- * Devuelve el catálogo de productos con filtros opcionales.
+ * Devuelve el catálogo de productos desde Supabase con filtros opcionales.
  *
  * Query params:
  *   ?category=Alimentación
  *   ?search=collar
  *   ?page=1&limit=20
- *
- * MIGRACIÓN FUTURA: reemplazar getAllProducts() por una query a la DB.
  */
 
 import { NextResponse } from "next/server"
-import { getAllProducts, getCategories } from "../../../lib/store/products"
+import { getActiveProducts } from "../../../lib/supabase/services"
 import { productQuerySchema, parseSchema } from "../../../lib/validations"
 
 export async function GET(request) {
@@ -24,7 +22,6 @@ export async function GET(request) {
       limit: searchParams.get("limit") ?? 50,
     }
 
-    // Validar query params
     const { data: query, errors } = parseSchema(productQuerySchema, rawQuery)
     if (errors) {
       return NextResponse.json(
@@ -33,12 +30,12 @@ export async function GET(request) {
       )
     }
 
-    const products = getAllProducts({
+    const products = await getActiveProducts({
       category: query.category,
       search: query.search,
     })
 
-    const categories = getCategories()
+    const categories = [...new Set(products.map((p) => p.category).filter(Boolean))].sort()
 
     return NextResponse.json({
       data: products,
