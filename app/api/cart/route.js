@@ -1,24 +1,15 @@
 /**
  * API Routes del Carrito
  *
- * GET    /api/cart            → obtener carrito (desde body del request)
- * POST   /api/cart            → agregar item
- * PATCH  /api/cart            → actualizar cantidad
- * DELETE /api/cart            → eliminar item o vaciar
+ * POST   /api/cart → validar producto y stock antes de agregar al carrito local
+ * PATCH  /api/cart → validar actualización de cantidad
+ * DELETE /api/cart → validar eliminación de item
  *
- * NOTA ARQUITECTURAL:
- * El carrito actualmente vive en localStorage del cliente (CartContext).
- * Estos endpoints validan los datos antes de que el cliente los use.
- * En el futuro, cuando haya usuarios autenticados, el carrito se guardará
- * en la base de datos asociado al usuario.
- *
- * MIGRACIÓN FUTURA:
- * - Cart guardado en DB: prisma.cart.upsert({ where: { userId }, data: { items } })
- * - El cliente pasa el userId (desde JWT/sesión) y el servidor mantiene el carrito
+ * El carrito vive en localStorage (CartContext). Estos endpoints solo validan.
  */
 
 import { NextResponse } from "next/server"
-import { getProductById, checkStock } from "../../../lib/store/products"
+import { getProductById, checkStock } from "../../../lib/supabase/services"
 import { addToCartSchema, updateCartSchema, removeFromCartSchema, parseSchema } from "../../../lib/validations"
 
 /** POST /api/cart → validar y agregar producto al carrito */
@@ -33,8 +24,7 @@ export async function POST(request) {
       )
     }
 
-    // Verificar que el producto existe
-    const product = getProductById(data.productId)
+    const product = await getProductById(data.productId)
     if (!product) {
       return NextResponse.json(
         { error: "Producto no encontrado" },
@@ -42,16 +32,14 @@ export async function POST(request) {
       )
     }
 
-    // Verificar stock
-    const stockCheck = checkStock(data.productId, data.quantity)
-    if (!stockCheck.ok) {
+    const hasStock = await checkStock(data.productId, data.quantity)
+    if (!hasStock) {
       return NextResponse.json(
-        { error: stockCheck.error },
+        { error: `Stock insuficiente. Disponible: ${product.stock}` },
         { status: 409 }
       )
     }
 
-    // Retornar el producto validado para que el cliente lo agregue al carrito local
     return NextResponse.json({
       success: true,
       product: {
@@ -92,7 +80,6 @@ export async function DELETE(request) {
   try {
     const body = await request.json()
 
-    // Si viene { all: true }, vaciar todo el carrito
     if (body?.all === true) {
       return NextResponse.json({ success: true, cleared: true })
     }
