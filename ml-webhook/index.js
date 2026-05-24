@@ -62,10 +62,10 @@ app.post("/webhook/mercadolibre", async (req, res) => {
     // Una orden puede tener múltiples ítems; se inserta una fila por ítem
     for (const item of order.order_items) {
       const titulo = item.item.title;
-      const sku = getSKU(titulo);
+      const sku = await getSKU(item.item); // resuelve por seller_custom_field → STOCK → fallback
 
       if (sku === "DESCONOCIDO") {
-        console.warn(`[Webhook] SKU no mapeado para: "${titulo}"`);
+        console.warn(`[Webhook] SKU no resuelto para: "${titulo}"`);
       }
 
       const variante =
