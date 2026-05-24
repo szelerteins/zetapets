@@ -63,10 +63,12 @@ const PUBLIC_URL   = process.env.PUBLIC_URL || "https://webhook-production-f90b.
 const REDIRECT_URI = `${PUBLIC_URL}/auth/callback`;
 const ML_AUTH_URL  =
   `https://auth.mercadolibre.com.ar/authorization?response_type=code` +
-  `&client_id=${process.env.ML_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+  `&client_id=${process.env.ML_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+  `&scope=offline_access`;
 
 async function saveTokens(data) {
   process.env.ML_ACCESS_TOKEN  = data.access_token;
+  process.env.ML_TOKEN_EXPIRES = String(Date.now() + (data.expires_in || 21600) * 1000);
   updateEnvFile("ML_ACCESS_TOKEN", data.access_token);
   if (data.refresh_token) {
     process.env.ML_REFRESH_TOKEN = data.refresh_token;
@@ -181,10 +183,15 @@ app.get("/auth/callback", async (req, res) => {
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
+  const expiresAt  = Number(process.env.ML_TOKEN_EXPIRES || 0);
+  const msLeft     = expiresAt - Date.now();
+  const horasLeft  = Math.max(0, msLeft / 1000 / 3600).toFixed(1);
+  const tokenOk    = msLeft > 0;
   res.json({
     status:       "ok",
     service:      "ZetaPets ML Webhook",
-    tokenExpires: process.env.ML_ACCESS_TOKEN ? "activo" : "sin token",
+    token:        tokenOk ? `válido por ${horasLeft}h más` : `⚠ EXPIRADO — renovar en ${PUBLIC_URL}/auth`,
+    refreshToken: process.env.ML_REFRESH_TOKEN ? "activo" : "no configurado",
   });
 });
 
