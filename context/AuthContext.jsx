@@ -117,6 +117,25 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function loginWithGoogle() {
+    try {
+      const supabase = getClient()
+      if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
+      const redirectTo = typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback`
+        : undefined
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      })
+      if (error) return { ok: false, error: translateAuthError(error.message) }
+      return { ok: true }
+    } catch (e) {
+      console.error("[loginWithGoogle]", e)
+      return { ok: false, error: "Error de conexión. Intentá de nuevo." }
+    }
+  }
+
   async function logout() {
     const supabase = getClient()
     if (supabase) await supabase.auth.signOut()
@@ -140,7 +159,7 @@ export function AuthProvider({ children }) {
     : null
 
   return (
-    <AuthContext.Provider value={{ user: userForHeader, rawUser: user, profile, isAdmin, loading, login, register, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user: userForHeader, rawUser: user, profile, isAdmin, loading, login, register, loginWithGoogle, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
