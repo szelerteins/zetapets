@@ -4,6 +4,14 @@ import { createAdminClient } from "../../../../lib/supabase/admin"
 import { orderConfirmationTemplate } from "../../../../lib/email-templates"
 import nodemailer from "nodemailer"
 
+async function sendWhatsApp(text) {
+  const phone  = process.env.CALLMEBOT_PHONE
+  const apikey = process.env.CALLMEBOT_APIKEY
+  if (!phone || !apikey) return
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(text)}&apikey=${apikey}`
+  await fetch(url).catch((err) => console.error("[WhatsApp] Error:", err.message))
+}
+
 async function sendConfirmationEmail({ order, items }) {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return
 
@@ -68,6 +76,18 @@ export async function POST(request) {
         mercadopago_payment_id: String(payment.id),
       })
       .eq("id", order.id)
+
+    // Notificación WhatsApp
+    try {
+      const resumen = (order.order_items || [])
+        .map((i) => `${i.product_name} x${i.quantity}`)
+        .join(", ")
+      await sendWhatsApp(
+        `🐾 Nueva venta Web\n📦 ${order.order_number}\n🏷 ${resumen}\n💰 $${payment.transaction_amount}`
+      )
+    } catch (waErr) {
+      console.error("[WhatsApp] Error:", waErr.message)
+    }
 
     // Enviar email al cliente
     try {
