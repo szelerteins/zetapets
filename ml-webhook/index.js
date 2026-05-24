@@ -1,20 +1,53 @@
 require("dotenv").config();
 const https = require("https");
+const http  = require("http");
+const fs    = require("fs");
+const path  = require("path");
 const express = require("express");
 
-// El reloj del sistema puede tener skew respecto a Google. Sincronizamos una
-// vez al arrancar y parchamos Date.now() para que googleapis genere JWTs válidos.
+const { getOrder, getPayments, extractCommission } = require("./mlClient");
+const { processSale } = require("./sheetsClient");
+const { getSKU } = require("./skuMapper");
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function updateEnvFile(key, value) {
+  try {
+    const envPath = path.resolve(__dirname, ".env");
+    let content = fs.readFileSync(envPath, "utf8");
+    const regex = new RegExp(`^${key}=.*$`, "m");
+    content = regex.test(content)
+      ? content.replace(regex, `${key}=${value}`)
+      : content + `\n${key}=${value}`;
+    fs.writeFileSync(envPath, content, "utf8");
+  } catch (_) {}
+}
+
+function httpsPost(hostname, urlPath, body) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      { hostname, path: urlPath, method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded",
+                   "Content-Length": Buffer.byteLength(body) } },
+      (res) => { let d = ""; res.on("data", c => d += c); res.on("end", () => resolve(JSON.parse(d))); }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+// ─── Sincronización de reloj (skew Google) ───────────────────────────────────
+
 function syncClock() {
   return new Promise((resolve) => {
     https.get("https://oauth2.googleapis.com/token", (res) => {
       const date = res.headers["date"];
       res.resume();
       if (date) {
-        const serverMs = new Date(date).getTime();
-        const localMs  = Date.now();
-        const skewMs   = serverMs - localMs;
+        const skewMs = new Date(date).getTime() - Date.now();
         if (Math.abs(skewMs) > 5000) {
-          console.log(`[Clock] Skew detectado: ${Math.round(skewMs / 1000)}s. Corrigiendo Date.now()`);
+          console.log(`[Clock] Skew: ${Math.round(skewMs / 1000)}s — corrigiendo Date.now()`);
           const orig = Date.now.bind(Date);
           Date.now = () => orig() + skewMs;
         }
@@ -23,89 +56,143 @@ function syncClock() {
     }).on("error", resolve);
   });
 }
-const { getOrder, getPayments, extractCommission } = require("./mlClient");
-const { processSale } = require("./sheetsClient");
-const { getSKU } = require("./skuMapper");
+
+// ─── OAuth ML ────────────────────────────────────────────────────────────────
+
+const PUBLIC_URL   = process.env.PUBLIC_URL || "https://webhook-production-f90b.up.railway.app";
+const REDIRECT_URI = `${PUBLIC_URL}/auth/callback`;
+const ML_AUTH_URL  =
+  `https://auth.mercadolibre.com.ar/authorization?response_type=code` +
+  `&client_id=${process.env.ML_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+
+async function saveTokens(data) {
+  process.env.ML_ACCESS_TOKEN  = data.access_token;
+  updateEnvFile("ML_ACCESS_TOKEN", data.access_token);
+  if (data.refresh_token) {
+    process.env.ML_REFRESH_TOKEN = data.refresh_token;
+    updateEnvFile("ML_REFRESH_TOKEN", data.refresh_token);
+    console.log("[Auth] Refresh token guardado — renovación automática activa");
+  }
+  if (data.user_id) {
+    process.env.ML_SELLER_ID = String(data.user_id);
+    updateEnvFile("ML_SELLER_ID", String(data.user_id));
+  }
+}
+
+// ─── Express ─────────────────────────────────────────────────────────────────
 
 const app = express();
 app.use(express.json());
 
-// ML valida la URL del webhook con un GET antes de activarla
-app.get("/webhook/mercadolibre", (req, res) => res.sendStatus(200));
+// ML valida el endpoint con GET antes de activar el webhook
+app.get("/webhook/mercadolibre", (_req, res) => res.sendStatus(200));
 
+// ── Webhook principal ──────────────────────────────────────────────────────
 app.post("/webhook/mercadolibre", async (req, res) => {
-  // Responder 200 de inmediato — ML reintenta si no recibe respuesta rápida
-  res.sendStatus(200);
+  res.sendStatus(200); // responder rápido para que ML no reintente
 
   const { topic, resource } = req.body || {};
-
-  // Solo procesar notificaciones de órdenes
   if (topic !== "orders_v2" && topic !== "orders") return;
 
-  // resource tiene la forma "/orders/1234567890"
   const orderId = resource?.split("/").pop();
   if (!orderId || !/^\d+$/.test(orderId)) return;
 
   try {
-    console.log(`[Webhook] Notificación recibida — Orden ${orderId}`);
+    console.log(`[Webhook] Orden ${orderId}`);
     const order = await getOrder(orderId);
 
-    // Solo procesar órdenes confirmadas/pagadas
     if (!["paid", "confirmed"].includes(order.status)) {
-      console.log(`[Webhook] Orden ${orderId} ignorada — estado: "${order.status}"`);
+      console.log(`[Webhook] Ignorada — estado: "${order.status}"`);
       return;
     }
 
     const payments = await getPayments(orderId);
     const comision = extractCommission(payments);
 
-    // Una orden puede tener múltiples ítems; se inserta una fila por ítem
     for (const item of order.order_items) {
-      const titulo = item.item.title;
-      const sku = await getSKU(item.item); // resuelve por seller_custom_field → STOCK → fallback
+      const sku      = await getSKU(item.item);
+      const variante = item.item.variation_attributes?.map(a => a.value_name).join(" / ") || "";
 
-      if (sku === "DESCONOCIDO") {
-        console.warn(`[Webhook] SKU no resuelto para: "${titulo}"`);
-      }
+      if (sku === "DESCONOCIDO") console.warn(`[Webhook] SKU no resuelto: "${item.item.title}"`);
 
-      const variante =
-        item.item.variation_attributes
-          ?.map((a) => a.value_name)
-          .join(" / ") || "";
-
-      const saleData = {
-        fecha: new Date(order.date_created).toLocaleDateString("es-AR"),
-        orderId: String(order.id),
+      const saleNum = await processSale({
+        fecha:         new Date(order.date_created).toLocaleDateString("es-AR"),
+        orderId:       String(order.id),
         sku,
-        nombre: titulo,
+        nombre:        item.item.title,
         variante,
-        cantidad: item.quantity,
+        cantidad:      item.quantity,
         precioUnitario: item.unit_price,
-        total: order.total_amount,
+        total:         order.total_amount,
         comision,
-      };
+      });
 
-      const saleNum = await processSale(saleData);
-      if (saleNum !== null) {
-        console.log(`[Webhook] OK — Venta #${saleNum} registrada para orden ${order.id}`);
-      }
+      if (saleNum !== null)
+        console.log(`[Webhook] Venta #${saleNum} registrada — orden ${order.id}`);
     }
   } catch (err) {
-    // No tirar error — ya respondimos 200; solo loguear para diagnóstico
-    console.error(`[Webhook] Error procesando orden ${orderId}:`, err.message);
-    if (err.response?.data) {
-      console.error("[Webhook] Detalle:", JSON.stringify(err.response.data));
-    }
+    console.error(`[Webhook] Error orden ${orderId}:`, err.message);
   }
 });
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "ZetaPets ML Webhook" });
+// ── OAuth: iniciar autorización ────────────────────────────────────────────
+app.get("/auth", (_req, res) => {
+  console.log("[Auth] Iniciando flujo OAuth ML");
+  res.redirect(ML_AUTH_URL);
 });
 
+// ── OAuth: callback de ML (recibe el code y lo intercambia por tokens) ─────
+app.get("/auth/callback", async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send("Falta el código de autorización.");
+
+  try {
+    const data = await httpsPost(
+      "api.mercadolibre.com",
+      "/oauth/token",
+      new URLSearchParams({
+        grant_type:    "authorization_code",
+        client_id:     process.env.ML_CLIENT_ID,
+        client_secret: process.env.ML_CLIENT_SECRET,
+        code,
+        redirect_uri:  REDIRECT_URI,
+      }).toString()
+    );
+
+    if (!data.access_token) throw new Error(JSON.stringify(data));
+
+    await saveTokens(data);
+    console.log("[Auth] Tokens actualizados correctamente");
+
+    const hasRefresh = !!data.refresh_token;
+    res.send(`
+      <h2>✓ ZetaPets — Autorización exitosa</h2>
+      <p>Access Token actualizado.</p>
+      ${hasRefresh
+        ? "<p><strong>✓ Refresh Token obtenido</strong> — el token se renovará automáticamente.</p>"
+        : "<p>⚠ Sin Refresh Token — el token dura 6 hs. Volvé a entrar a <a href='/auth'>/auth</a> antes de que expire.</p>"
+      }
+    `);
+  } catch (err) {
+    console.error("[Auth] Error:", err.message);
+    res.status(500).send(`Error al obtener tokens: ${err.message}`);
+  }
+});
+
+// ── Health check ───────────────────────────────────────────────────────────
+app.get("/health", (_req, res) => {
+  res.json({
+    status:       "ok",
+    service:      "ZetaPets ML Webhook",
+    tokenExpires: process.env.ML_ACCESS_TOKEN ? "activo" : "sin token",
+  });
+});
+
+// ─── Arranque ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 syncClock().then(() => {
   app.listen(PORT, () => {
     console.log(`ZetaPets webhook corriendo en puerto ${PORT}`);
+    console.log(`Para re-autorizar ML: ${PUBLIC_URL}/auth`);
   });
 });
