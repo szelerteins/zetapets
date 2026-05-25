@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useCart } from "../../context/CartContext"
 import CheckoutSteps from "../../components/CheckoutSteps"
+import { getShippingCost } from "../../lib/shipping-zones"
 
 function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
@@ -10,7 +12,9 @@ function formatPrice(n) {
 
 export default function CheckoutPage() {
   const { cart, totalPrice } = useCart()
-  const shipping = totalPrice >= 30000 ? 0 : 2990
+  const [deliveryMethod, setDeliveryMethod] = useState("shipping")
+  const [codigoPostal,   setCodigoPostal]   = useState("")
+  const shippingCost = getShippingCost(codigoPostal, totalPrice, deliveryMethod)
 
   return (
     <>
@@ -25,7 +29,11 @@ export default function CheckoutPage() {
 
             {/* Formulario multistep */}
             <div className="checkout-main">
-              <CheckoutSteps />
+              <CheckoutSteps
+                deliveryMethod={deliveryMethod}
+                setDeliveryMethod={setDeliveryMethod}
+                onCodigoPostalChange={setCodigoPostal}
+              />
             </div>
 
             {/* Resumen lateral */}
@@ -55,14 +63,14 @@ export default function CheckoutPage() {
                     <span>{formatPrice(totalPrice)}</span>
                   </div>
                   <div className="summary-line">
-                    <span>Envío</span>
-                    <span style={{ color: shipping === 0 ? "var(--verde-dark)" : "inherit", fontWeight: shipping === 0 ? 700 : 400 }}>
-                      {shipping === 0 ? "Gratis" : formatPrice(shipping)}
+                    <span>{deliveryMethod === "pickup" ? "Retiro en local" : "Envío"}</span>
+                    <span style={{ color: shippingCost === 0 ? "var(--verde-dark)" : "inherit", fontWeight: shippingCost === 0 ? 700 : 400 }}>
+                      {shippingCost === 0 ? "Gratis" : (codigoPostal ? formatPrice(shippingCost) : "Según tu CP")}
                     </span>
                   </div>
                   <div className="summary-line total">
                     <span>Total</span>
-                    <span>{formatPrice(totalPrice + shipping)}</span>
+                    <span>{formatPrice(totalPrice + shippingCost)}</span>
                   </div>
                 </div>
 

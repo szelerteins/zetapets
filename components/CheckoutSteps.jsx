@@ -219,12 +219,16 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
   )
 }
 
-export default function CheckoutSteps() {
+export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryMethod: propSetMethod, onCodigoPostalChange }) {
   const { totalPrice, cart, clearCart } = useCart()
   const [step, setStep]               = useState(1)
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState("")
-  const [deliveryMethod, setDeliveryMethod] = useState("shipping")
+  const [ownMethod, setOwnMethod]     = useState("shipping")
+
+  // Si el padre pasa el estado, usamos el del padre; si no, usamos el propio
+  const deliveryMethod    = propMethod    !== undefined ? propMethod    : ownMethod
+  const setDeliveryMethod = propSetMethod !== undefined ? propSetMethod : setOwnMethod
 
   const [userData, setUserData] = useState({
     nombre: "", apellido: "", email: "",
@@ -233,6 +237,7 @@ export default function CheckoutSteps() {
 
   function handleChange(field, value) {
     setUserData((prev) => ({ ...prev, [field]: value }))
+    if (field === "codigoPostal" && onCodigoPostalChange) onCodigoPostalChange(value)
   }
 
   const shippingCost = getShippingCost(userData.codigoPostal, totalPrice, deliveryMethod)

@@ -20,7 +20,6 @@ export async function POST(request) {
     const supabase    = createAdminClient()
     let orderId       = null
     let orderNumber   = "ZP-" + Math.floor(100000 + Math.random() * 900000)
-    let _dbError      = null
 
     if (supabase) {
       const { data: order, error } = await supabase
@@ -45,7 +44,6 @@ export async function POST(request) {
         .select()
         .single()
 
-      if (error) _dbError = error.message || JSON.stringify(error)
       if (!error && order) {
         orderId = order.id
         const orderItems = items.map((item) => ({
@@ -111,7 +109,6 @@ export async function POST(request) {
       init_point:   result.init_point,
       order_id:     orderId,
       order_number: orderNumber,
-      _debug_supabase: orderId ? "ok" : (_dbError || "insert_failed_no_error"),
     })
   } catch (err) {
     console.error("Error creando preference MP:", err)
