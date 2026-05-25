@@ -5,6 +5,7 @@ import AnnouncementBar from "../components/AnnouncementBar"
 import Footer from "../components/Footer"
 import Toast from "../components/Toast"
 import WhatsAppButton from "../components/WhatsAppButton"
+import ChatBot from "../components/ChatBot"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { Analytics } from "@vercel/analytics/next"
 import PageViewTracker from "../components/PageViewTracker"
@@ -29,6 +30,7 @@ export default function RootLayout({ children }) {
             <Footer />
             <Toast />
             <WhatsAppButton />
+            <ChatBot />
             <PageViewTracker />
           </CartProvider>
         </AuthProvider>
