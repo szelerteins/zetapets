@@ -9,6 +9,24 @@ const { getOrder, getPayments, extractCommission } = require("./mlClient");
 const { processSale } = require("./sheetsClient");
 const { getSKU } = require("./skuMapper");
 
+// ─── WhatsApp (CallMeBot) ─────────────────────────────────────────────────────
+
+function sendWhatsApp(text) {
+  const phone  = process.env.CALLMEBOT_PHONE;
+  const apikey = process.env.CALLMEBOT_APIKEY;
+  if (!phone || !apikey) return Promise.resolve();
+  const urlPath = `/whatsapp.php?phone=${phone}&text=${encodeURIComponent(text)}&apikey=${apikey}`;
+  return new Promise((resolve) => {
+    https.get({ hostname: "api.callmebot.com", path: urlPath }, (res) => {
+      res.resume();
+      res.on("end", resolve);
+    }).on("error", (err) => {
+      console.warn("[WhatsApp] Error:", err.message);
+      resolve();
+    });
+  });
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function updateEnvFile(key, value) {
@@ -66,19 +84,43 @@ const ML_AUTH_URL  =
   `&client_id=${process.env.ML_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
   `&scope=offline_access`;
 
+async function saveToRailway(vars) {
+  const railwayToken = process.env.RAILWAY_TOKEN;
+  if (!railwayToken) return;
+  const mutation = `mutation { variableCollectionUpsert(input: { projectId: "${process.env.RAILWAY_PROJECT_ID}", serviceId: "${process.env.RAILWAY_SERVICE_ID}", environmentId: "${process.env.RAILWAY_ENVIRONMENT_ID}", variables: { ${Object.entries(vars).map(([k,v]) => `${k}: "${v}"`).join(", ")} } }) }`;
+  return new Promise((resolve) => {
+    const body = JSON.stringify({ query: mutation });
+    const req = https.request(
+      { hostname: "backboard.railway.app", path: "/graphql/v2", method: "POST",
+        headers: { "Authorization": `Bearer ${railwayToken}`, "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) } },
+      (res) => { res.resume(); res.on("end", () => { console.log("[Railway] Variables persistidas"); resolve(); }); }
+    );
+    req.on("error", (e) => { console.warn("[Railway] Error guardando vars:", e.message); resolve(); });
+    req.write(body);
+    req.end();
+  });
+}
+
 async function saveTokens(data) {
   process.env.ML_ACCESS_TOKEN  = data.access_token;
   process.env.ML_TOKEN_EXPIRES = String(Date.now() + (data.expires_in || 21600) * 1000);
   updateEnvFile("ML_ACCESS_TOKEN", data.access_token);
+
+  const railwayVars = { ML_ACCESS_TOKEN: data.access_token };
+
   if (data.refresh_token) {
     process.env.ML_REFRESH_TOKEN = data.refresh_token;
     updateEnvFile("ML_REFRESH_TOKEN", data.refresh_token);
+    railwayVars.ML_REFRESH_TOKEN = data.refresh_token;
     console.log("[Auth] Refresh token guardado — renovación automática activa");
   }
   if (data.user_id) {
     process.env.ML_SELLER_ID = String(data.user_id);
     updateEnvFile("ML_SELLER_ID", String(data.user_id));
+    railwayVars.ML_SELLER_ID = String(data.user_id);
   }
+
+  await saveToRailway(railwayVars);
 }
 
 // ─── Express ─────────────────────────────────────────────────────────────────
@@ -111,6 +153,7 @@ app.post("/webhook/mercadolibre", async (req, res) => {
     const payments = await getPayments(orderId);
     const comision = extractCommission(payments);
 
+    let salesRegistered = 0;
     for (const item of order.order_items) {
       const sku      = await getSKU(item.item);
       const variante = item.item.variation_attributes?.map(a => a.value_name).join(" / ") || "";
@@ -129,8 +172,19 @@ app.post("/webhook/mercadolibre", async (req, res) => {
         comision,
       });
 
-      if (saleNum !== null)
+      if (saleNum !== null) {
         console.log(`[Webhook] Venta #${saleNum} registrada — orden ${order.id}`);
+        salesRegistered++;
+      }
+    }
+
+    if (salesRegistered > 0) {
+      const resumen = order.order_items
+        .map(i => `${i.item.title} x${i.quantity}`)
+        .join(", ");
+      await sendWhatsApp(
+        `🐾 Nueva venta ML\n📦 Orden ${order.id}\n🏷 ${resumen}\n💰 $${order.total_amount}`
+      );
     }
   } catch (err) {
     console.error(`[Webhook] Error orden ${orderId}:`, err.message);
