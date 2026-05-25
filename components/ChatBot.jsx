@@ -2,31 +2,49 @@
 
 import { useState, useEffect, useRef } from "react"
 
-/** Convierte [texto](url) y https://... en links clickeables */
+/** Renderiza markdown básico: **bold**, [link](url), **[link](url)** */
 function renderMessage(text) {
-  // Primero procesamos [texto](url)
+  // Regex que captura en orden: **[label](url)**, **texto**, [label](url)
+  const pattern = /\*\*\[([^\]]+)\]\((\/[^)]+|https?:\/\/[^)]+)\)\*\*|\*\*([^*]+)\*\*|\[([^\]]+)\]\((\/[^)]+|https?:\/\/[^)]+)\)/g
   const parts = []
-  const mdLink = /\[([^\]]+)\]\((\/[^\)]+|https?:\/\/[^\)]+)\)/g
   let last = 0
   let match
+  let key = 0
 
-  while ((match = mdLink.exec(text)) !== null) {
+  while ((match = pattern.exec(text)) !== null) {
+    // Texto plano antes del match
     if (match.index > last) parts.push(text.slice(last, match.index))
-    const [, label, href] = match
-    const isExternal = href.startsWith("http")
-    parts.push(
-      <a
-        key={match.index}
-        href={href}
-        target={isExternal ? "_blank" : "_self"}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        style={{ color: "#5BC0EB", fontWeight: 600, textDecoration: "underline" }}
-      >
-        {label}
-      </a>
-    )
+
+    if (match[1]) {
+      // **[label](url)** — link en negrita
+      const isExt = match[2].startsWith("http")
+      parts.push(
+        <a key={key++} href={match[2]}
+          target={isExt ? "_blank" : "_self"}
+          rel={isExt ? "noopener noreferrer" : undefined}
+          style={{ color: "#5BC0EB", fontWeight: 700, textDecoration: "underline" }}>
+          {match[1]}
+        </a>
+      )
+    } else if (match[3]) {
+      // **texto** — negrita simple
+      parts.push(<strong key={key++}>{match[3]}</strong>)
+    } else if (match[4]) {
+      // [label](url) — link normal
+      const isExt = match[5].startsWith("http")
+      parts.push(
+        <a key={key++} href={match[5]}
+          target={isExt ? "_blank" : "_self"}
+          rel={isExt ? "noopener noreferrer" : undefined}
+          style={{ color: "#5BC0EB", fontWeight: 600, textDecoration: "underline" }}>
+          {match[4]}
+        </a>
+      )
+    }
+
     last = match.index + match[0].length
   }
+
   if (last < text.length) parts.push(text.slice(last))
   return parts.length > 0 ? parts : text
 }
