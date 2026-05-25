@@ -2,6 +2,35 @@
 
 import { useState, useEffect, useRef } from "react"
 
+/** Convierte [texto](url) y https://... en links clickeables */
+function renderMessage(text) {
+  // Primero procesamos [texto](url)
+  const parts = []
+  const mdLink = /\[([^\]]+)\]\((\/[^\)]+|https?:\/\/[^\)]+)\)/g
+  let last = 0
+  let match
+
+  while ((match = mdLink.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index))
+    const [, label, href] = match
+    const isExternal = href.startsWith("http")
+    parts.push(
+      <a
+        key={match.index}
+        href={href}
+        target={isExternal ? "_blank" : "_self"}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        style={{ color: "#5BC0EB", fontWeight: 600, textDecoration: "underline" }}
+      >
+        {label}
+      </a>
+    )
+    last = match.index + match[0].length
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts.length > 0 ? parts : text
+}
+
 const WELCOME = "¡Hola! Soy el asistente de ZetaPets. ¿Te ayudo a encontrar el producto ideal para tu mascota?"
 
 export default function ChatBot() {
@@ -92,7 +121,7 @@ export default function ChatBot() {
                 key={i}
                 className={`chat-bubble ${m.role === "user" ? "chat-bubble--user" : "chat-bubble--bot"}`}
               >
-                {m.content}
+                {m.role === "assistant" ? renderMessage(m.content) : m.content}
               </div>
             ))}
             {loading && (

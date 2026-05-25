@@ -1,26 +1,29 @@
 import { NextResponse } from "next/server"
 import { getAllProducts } from "../../../lib/store/products"
-import { getActiveProducts } from "../../../lib/supabase/services"
 
 const WA_NUMBER = "5491131451107"
 
 const SYSTEM_PROMPT = `Sos el asistente de ZetaPets, una tienda argentina de productos inteligentes para mascotas (perros y gatos).
 
-INSTRUCCIÓN CRÍTICA: Solo podés mencionar productos que estén en el CATÁLOGO que se te provee abajo. NUNCA inventes ni menciones un producto que no esté en esa lista. Si no hay un producto adecuado para lo que pide el cliente, decíselo honestamente.
+INSTRUCCIÓN CRÍTICA: Solo podés mencionar productos que estén en el CATÁLOGO que se te provee abajo. NUNCA inventes ni menciones un producto que no esté en esa lista exacta.
+
+Cuando menciones un producto, SIEMPRE escribí el nombre usando este formato de link:
+[Nombre del producto](/productos/ID)
+Donde ID es el número que aparece entre paréntesis en el catálogo.
 
 Podés ayudar de dos formas:
 
 1. RECOMENDAR: si el cliente no sabe qué comprar, hacé máximo 2 preguntas.
    - Primera pregunta siempre: "¿Tu mascota es perro o gato?"
    - Segunda: si es perro → tamaño del perro; si es gato → si vive adentro o afuera.
-   - Después recomendá 1 o 2 productos del catálogo con nombre, precio y por qué es ideal.
+   - Después recomendá 1 o 2 productos del catálogo con nombre (como link), precio y por qué es ideal.
 
-2. RESPONDER PREGUNTAS sobre un producto específico: usá la descripción y variantes del catálogo para responder. Si la información no está en el catálogo, decí: "Para esa consulta específica te recomiendo escribirnos por WhatsApp: https://wa.me/${WA_NUMBER} — ¡te respondemos al toque!"
+2. RESPONDER PREGUNTAS sobre un producto específico: usá la descripción y variantes del catálogo. Si la info no está, decí: "Para esa consulta específica te recomiendo escribirnos por WhatsApp: https://wa.me/${WA_NUMBER} — ¡te respondemos al toque!"
 
 Reglas:
 - Respondé en español rioplatense, tono amigable y directo.
 - Si no sabés algo con certeza, mandalo al WhatsApp: https://wa.me/${WA_NUMBER}
-- Si el cliente pregunta algo fuera de mascotas o productos, redirigí amablemente.`
+- Si preguntan algo fuera de mascotas o productos, redirigí amablemente.`
 
 export async function POST(request) {
   try {
@@ -32,25 +35,20 @@ export async function POST(request) {
 
     const { messages } = body
 
-    // Intentamos Supabase primero (productos reales del admin).
-    // Si falla o está vacío, usamos el store local como respaldo.
-    let products = await getActiveProducts()
-    if (!products || products.length === 0) {
-      products = getAllProducts()
-    }
+    const products = getAllProducts()
 
     const productList = products
-      .filter((p) => p.badge !== "TEST") // excluir producto de prueba
+      .filter((p) => p.badge !== "TEST")
       .map((p) => {
-        let entry = `• ${p.name} — $${Number(p.price).toLocaleString("es-AR")} — Categoría: ${p.category}`
+        let entry = `• ${p.name} (ID: ${p.id}) — $${Number(p.price).toLocaleString("es-AR")} — Categoría: ${p.category}`
         if (p.description) entry += `\n  Descripción: ${p.description}`
-        if (p.variants?.length) entry += `\n  Talles/variantes disponibles: ${p.variants.join(", ")}`
-        if (p.badge && p.badge !== "TEST") entry += `\n  Destacado como: ${p.badge}`
+        if (p.variants?.length) entry += `\n  Talles/variantes: ${p.variants.join(", ")}`
+        if (p.badge) entry += `\n  Badge: ${p.badge}`
         return entry
       })
       .join("\n\n")
 
-    const systemWithProducts = `${SYSTEM_PROMPT}\n\n---\nCATÁLOGO COMPLETO DE PRODUCTOS (usá SOLO estos):\n${productList}`
+    const systemWithProducts = `${SYSTEM_PROMPT}\n\n---\nCATÁLOGO (usá SOLO estos productos, respetá el ID para los links):\n${productList}`
 
     const groqMessages = messages.map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
