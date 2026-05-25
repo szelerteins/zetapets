@@ -1,11 +1,11 @@
 /**
  * app/api/contact/route.js
  *
- * Recibe el formulario de contacto y envía un email a zetapets.ar@gmail.com
+ * Recibe el formulario de contacto y envía un email a zetapetsmascotas@gmail.com
  * usando nodemailer + Gmail SMTP con App Password.
  *
  * VARIABLES DE ENTORNO requeridas (en .env.local y en Vercel > Settings > Env):
- *   GMAIL_USER         → zetapets.ar@gmail.com
+ *   GMAIL_USER         → zetapetsmascotas@gmail.com
  *   GMAIL_APP_PASSWORD → contraseña de aplicación de 16 caracteres
  *
  * Cómo obtener la App Password de Gmail:
@@ -52,7 +52,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: `"ZetaPets Contacto" <${process.env.GMAIL_USER}>`,
       replyTo: `"${nombre}" <${email}>`,   // al responder, va al cliente
-      to:      process.env.GMAIL_USER,      // zetapets.ar@gmail.com
+      to:      process.env.GMAIL_USER,      // zetapetsmascotas@gmail.com
       subject: `[ZetaPets Contacto] ${asunto}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

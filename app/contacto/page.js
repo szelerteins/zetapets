@@ -70,7 +70,7 @@ export default function ContactoPage() {
               </p>
 
               {[
-                { icon: <MdOutlineEmail size={22} />, label: "Email", value: "zetapets.ar@gmail.com" },
+                { icon: <MdOutlineEmail size={22} />, label: "Email", value: "zetapetsmascotas@gmail.com" },
                 { icon: <MdOutlinePhone size={22} />, label: "WhatsApp", value: "+5491131451107" },
                 { icon: <MdOutlineAccessTime size={22} />, label: "Horario", value: "Lunes a viernes, 9 a 18 hs" },
                 { icon: <MdOutlineLocationOn size={22} />, label: "Ubicación", value: "Buenos Aires, Argentina" },
