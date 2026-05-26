@@ -22,6 +22,7 @@ import { loginSchema, parseSchema } from "../../../../lib/validations"
 // y usar bcrypt.compare(password, hashedPasswordFromDB)
 const ADMIN_CREDENTIALS = {
   username: "zetapets",
+  email: "zetapetsmascotas@gmail.com",
   // NUNCA hacer esto en producción: las contraseñas siempre en DB como hash
   password: "Zetapetsmascotas452026",
 }
@@ -51,7 +52,7 @@ export async function POST(request) {
     // FUTURO: const user = await prisma.user.findUnique({ where: { username: data.username } })
     //         const valid = await bcrypt.compare(data.password, user.passwordHash)
     const isValid =
-      data.username === ADMIN_CREDENTIALS.username &&
+      (data.username === ADMIN_CREDENTIALS.username || data.username === ADMIN_CREDENTIALS.email) &&
       data.password === ADMIN_CREDENTIALS.password
 
     if (!isValid) {
