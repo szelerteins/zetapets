@@ -35,8 +35,8 @@ export async function PUT(request, { params }) {
     emoji, badge, variants, features, images, color_variants, is_active,
   } = body
 
-  if (!name || !price || !category || !sku) {
-    return NextResponse.json({ error: "Nombre, precio, categoría y SKU son requeridos" }, { status: 400 })
+  if (!name || !price || !category) {
+    return NextResponse.json({ error: "Nombre, precio y categoría son requeridos" }, { status: 400 })
   }
 
   const cleanFeatures = (features || []).filter(f => f && f.trim() && f !== "N/A")

@@ -151,8 +151,8 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
 
     if (!form.name.trim()) return setError("El nombre es requerido")
     if (!form.price || Number(form.price) <= 0) return setError("El precio debe ser mayor a 0")
-    if (!form.sku.trim()) return setError("El SKU es requerido")
-    if (!skuStatus?.valid) return setError("Validá el SKU antes de guardar")
+    if (!isEdit && !form.sku.trim()) return setError("El SKU es requerido para nuevas publicaciones")
+    if (form.sku.trim() && !skuStatus?.valid) return setError("Validá el SKU antes de guardar")
 
     setSaving(true)
     const payload = {
@@ -261,7 +261,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
 
             {/* SKU con validación */}
             <div className="pf-field">
-              <label>SKU * <span className="pf-label-hint">(debe coincidir con el Excel)</span></label>
+              <label>SKU {!isEdit ? "*" : "(opcional)"} <span className="pf-label-hint">(debe coincidir con el Excel)</span></label>
               <div className="pf-sku-row">
                 <input
                   type="text"
@@ -269,9 +269,9 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
                   onChange={e => { set("sku", e.target.value); setSkuStatus(null) }}
                   placeholder="Ej: 009-A"
                   style={{ fontFamily: "monospace" }}
-                  disabled={isEdit}
+                  disabled={isEdit && !!product?.sku}
                 />
-                {!isEdit && (
+                {(!isEdit || (isEdit && !product?.sku)) && (
                   <button
                     type="button"
                     className="pf-btn-sku"
