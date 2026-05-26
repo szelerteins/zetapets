@@ -1,32 +1,34 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { createAdminClient } from "../../../../lib/supabase/admin"
-import { validateSKU } from "../../../../lib/sheets"
+import { createAdminClient } from "../../../../../lib/supabase/admin"
 
 async function checkAdmin() {
   const cookieStore = await cookies()
   return cookieStore.get("zetapets-session")?.value === "authenticated"
 }
 
-export async function GET() {
+export async function GET(request, { params }) {
   if (!(await checkAdmin())) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const supabase = createAdminClient()
   if (!supabase) return NextResponse.json({ error: "Supabase no configurado" }, { status: 503 })
 
+  const { id } = await params
   const { data, error } = await supabase
     .from("products")
-    .select("id, name, category, price, stock, emoji, badge, is_active, sku, images, image_url")
-    .order("category")
+    .select("*")
+    .eq("id", id)
+    .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: error.message }, { status: 404 })
   return NextResponse.json(data)
 }
 
-export async function POST(request) {
+export async function PUT(request, { params }) {
   if (!(await checkAdmin())) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const supabase = createAdminClient()
   if (!supabase) return NextResponse.json({ error: "Supabase no configurado" }, { status: 503 })
 
+  const { id } = await params
   const body = await request.json()
   const {
     name, description, price, category, sku, stock,
@@ -37,25 +39,19 @@ export async function POST(request) {
     return NextResponse.json({ error: "Nombre, precio, categoría y SKU son requeridos" }, { status: 400 })
   }
 
-  // Validate SKU against Google Sheet
-  const skuCheck = await validateSKU(sku)
-  if (!skuCheck.valid) {
-    return NextResponse.json({ error: skuCheck.error }, { status: 400 })
-  }
-
   const cleanFeatures = (features || []).filter(f => f && f.trim() && f !== "N/A")
   const cleanVariants = (variants || []).filter(v => v && v.trim())
   const cleanImages = (images || []).filter(u => u && u.trim())
 
   const { data, error } = await supabase
     .from("products")
-    .insert({
+    .update({
       name,
       description,
       price: Number(price),
       category,
       sku,
-      stock: stock !== undefined ? Number(stock) : skuCheck.stockActual,
+      stock: Number(stock) || 0,
       emoji,
       badge: badge || null,
       variants: cleanVariants.length ? cleanVariants : null,
@@ -64,21 +60,23 @@ export async function POST(request) {
       image_url: cleanImages[0] || null,
       color_variants: color_variants?.length ? color_variants : null,
       is_active: is_active !== false,
+      updated_at: new Date().toISOString(),
     })
+    .eq("id", id)
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json(data)
 }
 
-export async function PATCH(request) {
+export async function DELETE(request, { params }) {
   if (!(await checkAdmin())) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const supabase = createAdminClient()
   if (!supabase) return NextResponse.json({ error: "Supabase no configurado" }, { status: 503 })
 
-  const { id, is_active } = await request.json()
-  const { error } = await supabase.from("products").update({ is_active }).eq("id", id)
+  const { id } = await params
+  const { error } = await supabase.from("products").delete().eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

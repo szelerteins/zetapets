@@ -43,19 +43,28 @@ function formatPrice(n) {
   return "$" + n.toLocaleString("es-AR")
 }
 
+function strHash(str) {
+  let h = 0
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
 export default function ProductCard({ product }) {
   const { addToCart } = useCart()
   const [selected, setSelected] = useState(
-    product.variants ? product.variants[0] : null
+    product.variants?.length ? product.variants[0] : null
   )
   const [added, setAdded] = useState(false)
 
-  const gradient = cardGradients[product.id % cardGradients.length]
+  // Supabase uses image_url, legacy static data uses image
+  const image = product.images?.[0] || product.image_url || product.image
+
+  const gradient = cardGradients[strHash(String(product.id)) % cardGradients.length]
   const CategoryIcon = CATEGORY_ICONS[product.category] || MdOutlineCategory
 
   function handleAdd(e) {
     e.preventDefault()
-    addToCart(product, selected)
+    addToCart({ ...product, image }, selected)
     setAdded(true)
     setTimeout(() => setAdded(false), 1200)
   }
@@ -63,10 +72,10 @@ export default function ProductCard({ product }) {
   return (
     <article className="product-card product-card--clickable">
       <Link href={`/productos/${product.id}`} className="product-card-link" aria-label={product.name}>
-        <div className="product-image" style={!product.image ? { background: gradient } : {}}>
-          {product.image ? (
+        <div className="product-image" style={!image ? { background: gradient } : {}}>
+          {image ? (
             <Image
-              src={product.image}
+              src={image}
               alt={product.name}
               fill
               style={{ objectFit: "cover" }}
@@ -90,7 +99,7 @@ export default function ProductCard({ product }) {
         </Link>
         <p className="product-desc">{product.description}</p>
 
-        {product.variants && (
+        {product.variants?.length > 0 && (
           <div className="product-variants">
             {product.variants.map((v) => (
               <button

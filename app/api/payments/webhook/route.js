@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getMercadoPagoClient, Payment } from "../../../../lib/mercadopago"
 import { createAdminClient } from "../../../../lib/supabase/admin"
 import { orderConfirmationTemplate } from "../../../../lib/email-templates"
+import { appendWebSale, decrementStockVentas } from "../../../../lib/sheets"
 import nodemailer from "nodemailer"
 
 async function sendWhatsApp(text) {
@@ -28,11 +29,46 @@ async function sendConfirmationEmail({ order, items }) {
   })
 }
 
+async function registerSaleInSheets(supabase, order) {
+  try {
+    const { data: orderFull } = await supabase
+      .from("orders")
+      .select("*, order_items(*, products(sku))")
+      .eq("id", order.id)
+      .single()
+
+    if (!orderFull?.order_items?.length) return
+
+    const fecha = new Date().toLocaleDateString("es-AR")
+    const orderId = orderFull.order_number || orderFull.id
+
+    for (const item of orderFull.order_items) {
+      const sku = item.products?.sku || null
+
+      await appendWebSale({
+        fecha,
+        orderId,
+        sku,
+        nombre: item.product_name,
+        variante: item.variant || "",
+        cantidad: item.quantity,
+        precioUnitario: item.unit_price,
+        total: item.total_price,
+      })
+
+      if (sku) {
+        await decrementStockVentas(sku, item.quantity)
+      }
+    }
+  } catch (err) {
+    console.error("[Sheets] Error registrando venta web:", err.message)
+  }
+}
+
 export async function POST(request) {
   try {
     const body = await request.json()
 
-    // MP envía tipo "payment" cuando se procesa un pago
     if (body.type !== "payment" || !body.data?.id) {
       return NextResponse.json({ ok: true })
     }
@@ -48,14 +84,10 @@ export async function POST(request) {
     const supabase = createAdminClient()
     if (!supabase) return NextResponse.json({ ok: true })
 
-    // Buscar la orden por external_reference (puede ser el ID de Supabase)
     const externalRef = payment.external_reference
-    let query = supabase
-      .from("orders")
-      .select("*, order_items(*)")
+    let query = supabase.from("orders").select("*, order_items(*)")
 
-    // external_reference puede ser UUID o ZP-XXXXXX
-    if (externalRef && externalRef.includes("-") && externalRef.startsWith("ZP-")) {
+    if (externalRef && externalRef.startsWith("ZP-")) {
       query = query.eq("order_number", externalRef)
     } else {
       query = query.eq("id", externalRef)
@@ -67,7 +99,7 @@ export async function POST(request) {
     // Evitar procesar dos veces
     if (order.payment_status === "paid") return NextResponse.json({ ok: true })
 
-    // Actualizar estado
+    // Actualizar estado en Supabase
     await supabase
       .from("orders")
       .update({
@@ -89,17 +121,21 @@ export async function POST(request) {
       console.error("[WhatsApp] Error:", waErr.message)
     }
 
+    // Registrar en Google Sheets (no bloquea la respuesta si falla)
+    registerSaleInSheets(supabase, order).catch(err =>
+      console.error("[Sheets] Error asíncrono:", err.message)
+    )
+
     // Enviar email al cliente
     try {
       await sendConfirmationEmail({ order, items: order.order_items || [] })
     } catch (emailErr) {
-      console.error("Error enviando email de confirmación:", emailErr)
+      console.error("Error enviando email:", emailErr)
     }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error("Error en webhook MP:", err)
-    // Siempre responder 200 para que MP no reintente indefinidamente
     return NextResponse.json({ ok: true })
   }
 }
