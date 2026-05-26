@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createAdminClient } from "../../../../lib/supabase/admin"
-import { validateSKU } from "../../../../lib/sheets"
 
 async function checkAdmin() {
   const cookieStore = await cookies()
@@ -37,7 +36,8 @@ export async function POST(request) {
     return NextResponse.json({ error: "Nombre, precio, categoría y SKU son requeridos" }, { status: 400 })
   }
 
-  // Validate SKU against Google Sheet
+  // Validate SKU against Google Sheet (lazy import to avoid googleapis at module level)
+  const { validateSKU } = await import("../../../../lib/sheets")
   const skuCheck = await validateSKU(sku)
   if (!skuCheck.valid) {
     return NextResponse.json({ error: skuCheck.error }, { status: 400 })

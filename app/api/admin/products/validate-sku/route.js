@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { validateSKU } from "../../../../../lib/sheets"
 
 async function checkAdmin() {
   const cookieStore = await cookies()
@@ -15,6 +14,7 @@ export async function GET(request) {
 
   if (!sku?.trim()) return NextResponse.json({ error: "SKU requerido" }, { status: 400 })
 
+  const { validateSKU } = await import("../../../../../lib/sheets")
   const result = await validateSKU(sku.trim())
   return NextResponse.json(result)
 }
