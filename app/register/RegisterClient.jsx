@@ -13,6 +13,7 @@ export default function RegisterClient() {
 
   const [form, setForm] = useState({
     nombre: "", apellido: "", email: "", password: "", confirmPassword: "",
+    petBirthday: "", birthdayEmailConsent: false,
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState("")
@@ -20,8 +21,8 @@ export default function RegisterClient() {
   const [confirmEmail, setConfirmEmail] = useState("")
 
   function handleChange(e) {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }))
     setApiError("")
   }
@@ -34,7 +35,11 @@ export default function RegisterClient() {
     if (ve) { setErrors(ve); return }
 
     setLoading(true)
-    const result = await register(data)
+    const result = await register({
+      ...data,
+      petBirthday:           form.petBirthday || null,
+      birthdayEmailConsent:  form.birthdayEmailConsent,
+    })
     setLoading(false)
 
     if (result.ok) {
@@ -159,6 +164,50 @@ export default function RegisterClient() {
               />
               {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
             </div>
+          </div>
+
+          {/* Cumpleaños de mascota — opcional */}
+          <div style={{
+            background: "#f0fdf4", border: "1px solid #bbf7d0",
+            borderRadius: "10px", padding: "18px 20px", marginTop: "4px",
+          }}>
+            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#166534", fontSize: "0.92rem", display: "flex", alignItems: "center", gap: "6px" }}>
+              🎂 Cumpleaños de tu mascota
+              <span style={{ fontWeight: 400, color: "#64748b", fontSize: "0.82rem" }}>(opcional)</span>
+            </p>
+            <p style={{ margin: "0 0 14px", fontSize: "0.82rem", color: "#475569", lineHeight: 1.5 }}>
+              Registrá la fecha y una semana antes te mandamos un <strong>10% de descuento</strong> en toda la tienda.
+            </p>
+            <div className="admin-form-group" style={{ marginBottom: form.petBirthday ? "12px" : "0" }}>
+              <label htmlFor="petBirthday" style={{ color: "#166534" }}>Fecha de nacimiento de tu mascota</label>
+              <input
+                id="petBirthday" name="petBirthday" type="date"
+                value={form.petBirthday} onChange={handleChange}
+                max={new Date().toISOString().split("T")[0]}
+                disabled={loading}
+                style={{ borderColor: "#bbf7d0" }}
+              />
+            </div>
+
+            {form.petBirthday && (
+              <label style={{
+                display: "flex", alignItems: "flex-start", gap: "10px",
+                cursor: "pointer", fontSize: "0.85rem", color: "#374151",
+              }}>
+                <input
+                  type="checkbox"
+                  name="birthdayEmailConsent"
+                  checked={form.birthdayEmailConsent}
+                  onChange={handleChange}
+                  disabled={loading}
+                  style={{ marginTop: "2px", flexShrink: 0, accentColor: "#16a34a" }}
+                />
+                <span>
+                  Acepto recibir un email con mi descuento de cumpleaños de ZetaPets.
+                  <span style={{ color: "#64748b" }}> (Podés cancelarlo en cualquier momento desde tu cuenta.)</span>
+                </span>
+              </label>
+            )}
           </div>
 
           {apiError && <p className="admin-login-error">{apiError}</p>}

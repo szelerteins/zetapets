@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 import { getMercadoPagoClient, Preference } from "../../../../lib/mercadopago"
 import { createAdminClient } from "../../../../lib/supabase/admin"
+import { createClient } from "../../../../lib/supabase/server"
 import { getShippingCost, PICKUP_INFO } from "../../../../lib/shipping-zones"
+import { isBirthdayWindowActive } from "../../../../lib/birthday"
 
 export async function POST(request) {
   try {
-    const { items, buyer, cartTotal, deliveryMethod = "shipping" } = await request.json()
+    const { items, buyer, cartTotal, deliveryMethod = "shipping", birthdayDiscount: clientBirthdayDiscount } = await request.json()
 
     if (!items?.length || !buyer?.email) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 })
@@ -13,6 +15,28 @@ export async function POST(request) {
 
     const isPickup     = deliveryMethod === "pickup"
     const shippingCost = getShippingCost(buyer.codigoPostal, cartTotal, deliveryMethod)
+
+    // Validar descuento de cumpleaños server-side para evitar manipulación
+    let birthdayDiscountApplied = false
+    if (clientBirthdayDiscount) {
+      try {
+        const supabaseUser = await createClient()
+        const { data: { user: authUser } } = await supabaseUser.auth.getUser()
+        if (authUser) {
+          const { data: prof } = await supabaseUser
+            .from("profiles")
+            .select("pet_birthday, birthday_email_consent")
+            .eq("user_id", authUser.id)
+            .single()
+          if (prof?.birthday_email_consent && isBirthdayWindowActive(prof.pet_birthday)) {
+            birthdayDiscountApplied = true
+          }
+        }
+      } catch (_) { /* si falla la validación, no aplicar descuento */ }
+    }
+
+    const discountMultiplier = birthdayDiscountApplied ? 0.9 : 1
+    const effectiveCartTotal = Math.round(cartTotal * discountMultiplier)
 
     const client     = getMercadoPagoClient()
     const preference = new Preference(client)
@@ -25,13 +49,14 @@ export async function POST(request) {
       const { data: order, error } = await supabase
         .from("orders")
         .insert({
-          order_number:         orderNumber,
-          status:               "pending",
-          payment_status:       "pending",
-          subtotal:             cartTotal,
-          tax:                  0,
-          total:                cartTotal + shippingCost,
-          shipping_cost:        shippingCost,
+          order_number:              orderNumber,
+          status:                    "pending",
+          payment_status:            "pending",
+          subtotal:                  cartTotal,
+          tax:                       0,
+          total:                     effectiveCartTotal + shippingCost,
+          shipping_cost:             shippingCost,
+          birthday_discount_applied: birthdayDiscountApplied,
           payment_method:       "mercadopago",
           delivery_method:      deliveryMethod,
           shipping_name:        `${buyer.nombre} ${buyer.apellido}`,
@@ -59,12 +84,12 @@ export async function POST(request) {
       }
     }
 
-    // Construir ítems para MercadoPago
+    // Construir ítems para MercadoPago (aplicar descuento si corresponde)
     const mpItems = items.map((item) => ({
       id:          String(item.id),
       title:       item.name + (item.selectedVariant ? ` (${item.selectedVariant})` : ""),
       quantity:    item.quantity,
-      unit_price:  Math.max(item.price, 1), // MP requiere mínimo 1
+      unit_price:  Math.max(Math.round(item.price * discountMultiplier), 1),
       currency_id: "ARS",
     }))
 

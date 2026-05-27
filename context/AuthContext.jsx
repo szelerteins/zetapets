@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function register({ nombre, apellido, email, password }) {
+  async function register({ nombre, apellido, email, password, petBirthday, birthdayEmailConsent }) {
     try {
       const supabase = getClient()
       if (!supabase) return { ok: false, error: "Supabase no está configurado aún" }
@@ -85,13 +85,18 @@ export function AuthProvider({ children }) {
         ? `${window.location.origin}/auth/callback`
         : undefined
 
+      // Guardamos birthday en metadata para que el trigger lo persista
+      // incluso cuando se requiere confirmación de email
+      const metadata = { full_name: `${nombre} ${apellido}` }
+      if (petBirthday) {
+        metadata.pet_birthday = petBirthday
+        metadata.birthday_email_consent = String(!!birthdayEmailConsent)
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: redirectTo,
-          data: { full_name: `${nombre} ${apellido}` },
-        },
+        options: { emailRedirectTo: redirectTo, data: metadata },
       })
 
       if (error) return { ok: false, error: translateAuthError(error.message) }
@@ -103,10 +108,15 @@ export function AuthProvider({ children }) {
 
       // Si hay sesión (confirmación deshabilitada) → login automático
       if (data.user) {
-        await supabase.from("profiles").upsert({
+        const profileData = {
           user_id:   data.user.id,
           full_name: `${nombre} ${apellido}`,
-        }, { onConflict: "user_id" })
+        }
+        if (petBirthday) {
+          profileData.pet_birthday           = petBirthday
+          profileData.birthday_email_consent = !!birthdayEmailConsent
+        }
+        await supabase.from("profiles").upsert(profileData, { onConflict: "user_id" })
         setUser(data.user)
         await loadProfile(supabase, data.user.id)
       }

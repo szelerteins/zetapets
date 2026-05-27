@@ -11,7 +11,10 @@ export default function AccountPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [form, setForm] = useState({ full_name: "", phone: "", address: "", city: "", postal_code: "" })
+  const [form, setForm] = useState({
+    full_name: "", phone: "", address: "", city: "", postal_code: "",
+    pet_birthday: "", birthday_email_consent: false,
+  })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved]   = useState(false)
   const [error, setError]   = useState("")
@@ -23,11 +26,13 @@ export default function AccountPage() {
   useEffect(() => {
     if (profile) {
       setForm({
-        full_name:   profile.full_name   ?? "",
-        phone:       profile.phone       ?? "",
-        address:     profile.address     ?? "",
-        city:        profile.city        ?? "",
-        postal_code: profile.postal_code ?? "",
+        full_name:               profile.full_name               ?? "",
+        phone:                   profile.phone                   ?? "",
+        address:                 profile.address                 ?? "",
+        city:                    profile.city                    ?? "",
+        postal_code:             profile.postal_code             ?? "",
+        pet_birthday:            profile.pet_birthday            ?? "",
+        birthday_email_consent:  profile.birthday_email_consent  ?? false,
       })
     }
   }, [profile])
@@ -136,6 +141,42 @@ export default function AccountPage() {
               <div className="form-group">
                 <label>Ciudad</label>
                 <input value={form.city} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} placeholder="Buenos Aires" />
+              </div>
+
+              {/* Sección cumpleaños mascota */}
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "18px 20px" }}>
+                <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#166534", fontSize: "0.92rem" }}>
+                  🎂 Cumpleaños de tu mascota
+                </p>
+                <p style={{ margin: "0 0 14px", fontSize: "0.82rem", color: "#475569", lineHeight: 1.5 }}>
+                  Registrá la fecha y te mandamos un <strong>10% de descuento</strong> una semana antes para celebrarlo con una compra especial.
+                </p>
+
+                <div className="form-group" style={{ marginBottom: form.pet_birthday ? 12 : 0 }}>
+                  <label style={{ color: "#166534" }}>Fecha de nacimiento <span style={{ fontWeight: 400, color: "#64748b" }}>(opcional)</span></label>
+                  <input
+                    type="date"
+                    value={form.pet_birthday}
+                    onChange={(e) => setForm((p) => ({ ...p, pet_birthday: e.target.value, birthday_email_consent: e.target.value ? p.birthday_email_consent : false }))}
+                    max={new Date().toISOString().split("T")[0]}
+                    style={{ borderColor: "#bbf7d0" }}
+                  />
+                </div>
+
+                {form.pet_birthday && (
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", fontSize: "0.85rem", color: "#374151" }}>
+                    <input
+                      type="checkbox"
+                      checked={form.birthday_email_consent}
+                      onChange={(e) => setForm((p) => ({ ...p, birthday_email_consent: e.target.checked }))}
+                      style={{ marginTop: 2, flexShrink: 0, accentColor: "#16a34a" }}
+                    />
+                    <span>
+                      Quiero recibir el email de descuento de cumpleaños de ZetaPets.
+                      <span style={{ color: "#64748b" }}> (Podés desactivarlo en cualquier momento.)</span>
+                    </span>
+                  </label>
+                )}
               </div>
 
               {error && <p style={{ color: "#ef4444", fontSize: "0.88rem" }}>{error}</p>}

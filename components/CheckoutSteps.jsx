@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCart } from "../context/CartContext"
+import { useAuth } from "../context/AuthContext"
 import { getShippingCost, PICKUP_INFO, FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
+import { isBirthdayWindowActive, formatBirthdayDisplay } from "../lib/birthday"
 import {
   MdOutlineLocalShipping,
   MdOutlineStorefront,
@@ -149,8 +151,9 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
   )
 }
 
-function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost, total, loading }) {
+function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost, total, loading, birthdayDiscount }) {
   const isPickup = deliveryMethod === "pickup"
+  const discountAmount = birthdayDiscount ? Math.round(subtotal * 0.1) : 0
 
   return (
     <div className="checkout-step">
@@ -186,6 +189,12 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
+        {birthdayDiscount && (
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", color: "#b45309", fontWeight: 600 }}>
+            <span>🎂 Descuento cumpleaños (-10%)</span>
+            <span>-{formatPrice(discountAmount)}</span>
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", color: "#64748b" }}>
           <span>{isPickup ? "Retiro en local" : "Envío"}</span>
           <span style={{ color: "var(--verde-dark)", fontWeight: 700 }}>
@@ -221,10 +230,11 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
 
 export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryMethod: propSetMethod, onCodigoPostalChange }) {
   const { totalPrice, cart, clearCart } = useCart()
-  const [step, setStep]               = useState(1)
-  const [loading, setLoading]         = useState(false)
-  const [error, setError]             = useState("")
-  const [ownMethod, setOwnMethod]     = useState("shipping")
+  const { user, profile }               = useAuth()
+  const [step, setStep]                 = useState(1)
+  const [loading, setLoading]           = useState(false)
+  const [error, setError]               = useState("")
+  const [ownMethod, setOwnMethod]       = useState("shipping")
 
   // Si el padre pasa el estado, usamos el del padre; si no, usamos el propio
   const deliveryMethod    = propMethod    !== undefined ? propMethod    : ownMethod
@@ -235,13 +245,37 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
     telefono: "", direccion: "", ciudad: "", codigoPostal: "",
   })
 
+  // Autocompletar con datos del perfil del usuario logueado
+  useEffect(() => {
+    if (!user) return
+    const [firstName, ...rest] = ((profile?.full_name) || user.nombre || "").split(" ")
+    setUserData((prev) => ({
+      nombre:       prev.nombre       || firstName || "",
+      apellido:     prev.apellido     || rest.join(" ") || user.apellido || "",
+      email:        prev.email        || user.email || "",
+      telefono:     prev.telefono     || profile?.phone       || "",
+      direccion:    prev.direccion    || profile?.address     || "",
+      ciudad:       prev.ciudad       || profile?.city        || "",
+      codigoPostal: prev.codigoPostal || profile?.postal_code || "",
+    }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, profile?.user_id])
+
+  // Detectar si el usuario tiene descuento de cumpleaños activo
+  const birthdayDiscount = !!(
+    profile?.birthday_email_consent &&
+    isBirthdayWindowActive(profile?.pet_birthday)
+  )
+
   function handleChange(field, value) {
     setUserData((prev) => ({ ...prev, [field]: value }))
     if (field === "codigoPostal" && onCodigoPostalChange) onCodigoPostalChange(value)
   }
 
-  const shippingCost = getShippingCost(userData.codigoPostal, totalPrice, deliveryMethod)
-  const total        = totalPrice + shippingCost
+  const shippingCost    = getShippingCost(userData.codigoPostal, totalPrice, deliveryMethod)
+  const discountAmount  = birthdayDiscount ? Math.round(totalPrice * 0.1) : 0
+  const effectivePrice  = totalPrice - discountAmount
+  const total           = effectivePrice + shippingCost
 
   async function handleConfirm() {
     setLoading(true)
@@ -251,10 +285,11 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items:          cart,
-          buyer:          userData,
-          cartTotal:      totalPrice,
+          items:           cart,
+          buyer:           userData,
+          cartTotal:       totalPrice,
           deliveryMethod,
+          birthdayDiscount,
         }),
       })
       const data = await res.json()
@@ -281,6 +316,27 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
   return (
     <div className="checkout-wrapper">
       <StepIndicator step={step} />
+
+      {/* Banner de descuento de cumpleaños */}
+      {birthdayDiscount && (
+        <div style={{
+          background: "linear-gradient(135deg,#fef3c7,#fde68a)",
+          border: "2px solid #f59e0b", borderRadius: "10px",
+          padding: "14px 18px", marginBottom: "18px",
+          display: "flex", alignItems: "center", gap: "10px",
+        }}>
+          <span style={{ fontSize: "1.6rem" }}>🎂</span>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, color: "#92400e", fontSize: "0.95rem" }}>
+              ¡Descuento de cumpleaños activo!
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#78350f" }}>
+              10% de descuento aplicado automáticamente en esta compra
+              {profile?.pet_birthday ? ` · Cumpleaños: ${formatBirthdayDisplay(profile.pet_birthday)}` : ""}.
+            </p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", color: "#dc2626", fontSize: "0.9rem", display: "flex", alignItems: "flex-start", gap: "8px" }}>
@@ -310,6 +366,7 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
           shippingCost={shippingCost}
           total={total}
           loading={loading}
+          birthdayDiscount={birthdayDiscount}
         />
       )}
     </div>
