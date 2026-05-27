@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server"
 import { getMercadoPagoClient, Preference } from "../../../../lib/mercadopago"
 import { createAdminClient } from "../../../../lib/supabase/admin"
-import { createClient } from "../../../../lib/supabase/server"
 import { getShippingCost, PICKUP_INFO } from "../../../../lib/shipping-zones"
-import { isBirthdayWindowActive } from "../../../../lib/birthday"
 
 export async function POST(request) {
   try {
-    const { items, buyer, cartTotal, deliveryMethod = "shipping", birthdayDiscount: clientBirthdayDiscount } = await request.json()
+    const { items, buyer, cartTotal, deliveryMethod = "shipping", discountCode } = await request.json()
 
     if (!items?.length || !buyer?.email) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 })
@@ -15,22 +13,19 @@ export async function POST(request) {
 
     const isPickup     = deliveryMethod === "pickup"
     const shippingCost = getShippingCost(buyer.codigoPostal, cartTotal, deliveryMethod)
+    const supabase     = createAdminClient()
 
-    // Validar descuento de cumpleaños server-side para evitar manipulación
+    // Validar código de descuento server-side para evitar manipulación
     let birthdayDiscountApplied = false
-    if (clientBirthdayDiscount) {
+    if (discountCode && supabase) {
       try {
-        const supabaseUser = await createClient()
-        const { data: { user: authUser } } = await supabaseUser.auth.getUser()
-        if (authUser) {
-          const { data: prof } = await supabaseUser
-            .from("profiles")
-            .select("pet_birthday, birthday_email_consent")
-            .eq("user_id", authUser.id)
-            .single()
-          if (prof?.birthday_email_consent && isBirthdayWindowActive(prof.pet_birthday)) {
-            birthdayDiscountApplied = true
-          }
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("discount_expires_at")
+          .eq("discount_code", discountCode)
+          .single()
+        if (prof?.discount_expires_at && new Date(prof.discount_expires_at) > new Date()) {
+          birthdayDiscountApplied = true
         }
       } catch (_) { /* si falla la validación, no aplicar descuento */ }
     }
@@ -41,9 +36,8 @@ export async function POST(request) {
     const client     = getMercadoPagoClient()
     const preference = new Preference(client)
 
-    const supabase    = createAdminClient()
-    let orderId       = null
-    let orderNumber   = "ZP-" + Math.floor(100000 + Math.random() * 900000)
+    let orderId     = null
+    let orderNumber = "ZP-" + Math.floor(100000 + Math.random() * 900000)
 
     if (supabase) {
       const { data: order, error } = await supabase
@@ -84,7 +78,6 @@ export async function POST(request) {
       }
     }
 
-    // Construir ítems para MercadoPago (aplicar descuento si corresponde)
     const mpItems = items.map((item) => ({
       id:          String(item.id),
       title:       item.name + (item.selectedVariant ? ` (${item.selectedVariant})` : ""),

@@ -3,11 +3,10 @@
  *
  * Cron job diario: envía emails de descuento de cumpleaños a los usuarios
  * cuya mascota cumple años exactamente en 7 días.
+ * Genera un código único por usuario y lo guarda con fecha de vencimiento.
  *
  * Configurado en vercel.json como cron "0 12 * * *" (12:00 UTC = 09:00 AR)
- *
- * PROTECCIÓN: requiere el header Authorization: Bearer CRON_SECRET
- * Variable de entorno requerida: CRON_SECRET
+ * Requiere variable de entorno: CRON_SECRET
  */
 
 import { NextResponse } from "next/server"
@@ -16,8 +15,31 @@ import { createAdminClient } from "../../../lib/supabase/admin"
 import { birthdayDiscountTemplate } from "../../../lib/email-templates"
 import { isBirthdayInExactlyDays } from "../../../lib/birthday"
 
+function generateCouponCode() {
+  // Alfabeto sin caracteres confusos (0/O, 1/I/L)
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+  let code = "ZETA"
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
+}
+
+function getExpiresAt(petBirthday) {
+  const parts = petBirthday.split("-").map(Number)
+  const bMonth = parts[1] - 1
+  const bDay   = parts[2]
+  const now    = new Date()
+  const year   = now.getFullYear()
+
+  let anniversary = new Date(year, bMonth, bDay)
+  if (anniversary < now) anniversary = new Date(year + 1, bMonth, bDay)
+
+  // Vence el día siguiente al cumpleaños a las 00:00 UTC
+  return new Date(anniversary.getFullYear(), anniversary.getMonth(), anniversary.getDate() + 1)
+}
+
 export async function GET(request) {
-  // Validar secret para que solo Vercel Cron pueda dispararlo
   const authHeader = request.headers.get("authorization")
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
@@ -28,7 +50,6 @@ export async function GET(request) {
     return NextResponse.json({ error: "Supabase no configurado" }, { status: 500 })
   }
 
-  // Obtener perfiles con cumpleaños de mascota y consentimiento activo
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select("user_id, full_name, pet_birthday, birthday_email_consent")
@@ -40,7 +61,6 @@ export async function GET(request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Filtrar los que cumplen en exactamente 7 días
   const todayTargets = (profiles || []).filter((p) =>
     isBirthdayInExactlyDays(p.pet_birthday, 7)
   )
@@ -50,7 +70,6 @@ export async function GET(request) {
   }
 
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.error("[birthday-emails] Faltan variables de entorno de email")
     return NextResponse.json({ error: "Email no configurado" }, { status: 500 })
   }
 
@@ -64,20 +83,30 @@ export async function GET(request) {
 
   for (const profile of todayTargets) {
     try {
-      // Obtener el email del usuario via Auth Admin
       const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(profile.user_id)
       if (userError || !user?.email) continue
+
+      // Generar código único y guardarlo con vencimiento
+      const code      = generateCouponCode()
+      const expiresAt = getExpiresAt(profile.pet_birthday)
+
+      await supabase
+        .from("profiles")
+        .update({ discount_code: code, discount_expires_at: expiresAt.toISOString() })
+        .eq("user_id", profile.user_id)
 
       const firstName = (profile.full_name || user.email.split("@")[0]).split(" ")[0]
 
       await transporter.sendMail({
         from:    `"ZetaPets" <${process.env.GMAIL_USER}>`,
         to:      user.email,
-        subject: `🎂 ¡Se acerca el cumpleaños de tu mascota! Tu 10% de descuento te espera`,
+        subject: `🎂 ¡Se acerca el cumpleaños de tu mascota! Tu código de descuento`,
         html:    birthdayDiscountTemplate({
           userName:    firstName,
           petBirthday: profile.pet_birthday,
           discountPct: 10,
+          couponCode:  code,
+          expiresAt,
         }),
       })
 

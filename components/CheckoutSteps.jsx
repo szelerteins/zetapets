@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { getShippingCost, PICKUP_INFO, FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
-import { isBirthdayWindowActive, formatBirthdayDisplay } from "../lib/birthday"
 import {
   MdOutlineLocalShipping,
   MdOutlineStorefront,
@@ -151,9 +150,9 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
   )
 }
 
-function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost, total, loading, birthdayDiscount }) {
+function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost, total, loading, couponActive }) {
   const isPickup = deliveryMethod === "pickup"
-  const discountAmount = birthdayDiscount ? Math.round(subtotal * 0.1) : 0
+  const discountAmount = couponActive ? Math.round(subtotal * 0.1) : 0
 
   return (
     <div className="checkout-step">
@@ -189,7 +188,7 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        {birthdayDiscount && (
+        {couponActive && (
           <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", color: "#b45309", fontWeight: 600 }}>
             <span>🎂 Descuento cumpleaños (-10%)</span>
             <span>-{formatPrice(discountAmount)}</span>
@@ -245,6 +244,10 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
     telefono: "", direccion: "", ciudad: "", codigoPostal: "",
   })
 
+  const [couponCode, setCouponCode]     = useState("")
+  const [couponStatus, setCouponStatus] = useState("idle") // idle | checking | valid | invalid
+  const [couponError, setCouponError]   = useState("")
+
   // Autocompletar con datos del perfil del usuario logueado
   useEffect(() => {
     if (!user) return
@@ -261,21 +264,50 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, profile?.user_id])
 
-  // Detectar si el usuario tiene descuento de cumpleaños activo
-  const birthdayDiscount = !!(
-    profile?.birthday_email_consent &&
-    isBirthdayWindowActive(profile?.pet_birthday)
-  )
+  // Auto-aplicar código de descuento del perfil si no venció
+  useEffect(() => {
+    if (!profile?.discount_code || !profile?.discount_expires_at) return
+    if (new Date(profile.discount_expires_at) > new Date()) {
+      setCouponCode(profile.discount_code)
+      setCouponStatus("valid")
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.discount_code])
+
+  const couponActive   = couponStatus === "valid"
+  const discountAmount = couponActive ? Math.round(totalPrice * 0.1) : 0
+  const effectivePrice = totalPrice - discountAmount
 
   function handleChange(field, value) {
     setUserData((prev) => ({ ...prev, [field]: value }))
     if (field === "codigoPostal" && onCodigoPostalChange) onCodigoPostalChange(value)
   }
 
-  const shippingCost    = getShippingCost(userData.codigoPostal, totalPrice, deliveryMethod)
-  const discountAmount  = birthdayDiscount ? Math.round(totalPrice * 0.1) : 0
-  const effectivePrice  = totalPrice - discountAmount
-  const total           = effectivePrice + shippingCost
+  async function handleCouponApply() {
+    if (!couponCode.trim()) return
+    setCouponStatus("checking")
+    setCouponError("")
+    try {
+      const res = await fetch("/api/discount/validate", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ code: couponCode.trim().toUpperCase() }),
+      })
+      const json = await res.json()
+      if (res.ok && json.valid) {
+        setCouponStatus("valid")
+      } else {
+        setCouponStatus("invalid")
+        setCouponError(json.error || "Código inválido o vencido")
+      }
+    } catch {
+      setCouponStatus("invalid")
+      setCouponError("Error al validar el código")
+    }
+  }
+
+  const shippingCost = getShippingCost(userData.codigoPostal, totalPrice, deliveryMethod)
+  const total        = effectivePrice + shippingCost
 
   async function handleConfirm() {
     setLoading(true)
@@ -285,11 +317,11 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items:           cart,
-          buyer:           userData,
-          cartTotal:       totalPrice,
+          items:         cart,
+          buyer:         userData,
+          cartTotal:     totalPrice,
           deliveryMethod,
-          birthdayDiscount,
+          discountCode:  couponActive ? couponCode.trim().toUpperCase() : null,
         }),
       })
       const data = await res.json()
@@ -317,8 +349,57 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
     <div className="checkout-wrapper">
       <StepIndicator step={step} />
 
-      {/* Banner de descuento de cumpleaños */}
-      {birthdayDiscount && (
+      {/* Campo de código de descuento */}
+      <div style={{ marginBottom: "16px" }}>
+        <p style={{ margin: "0 0 8px", fontSize: "0.85rem", color: "#475569", fontWeight: 600 }}>
+          ¿Tenés un código de descuento?
+        </p>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <input
+            type="text"
+            value={couponCode}
+            onChange={(e) => {
+              setCouponCode(e.target.value.toUpperCase())
+              if (couponStatus !== "idle") { setCouponStatus("idle"); setCouponError("") }
+            }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleCouponApply() }}
+            placeholder="ZETA______"
+            style={{
+              flex: 1, padding: "10px 12px", borderRadius: "8px",
+              border: `1.5px solid ${couponStatus === "valid" ? "#22c55e" : couponStatus === "invalid" ? "#ef4444" : "#e2e8f0"}`,
+              fontSize: "0.95rem", fontFamily: "monospace", letterSpacing: "0.06em",
+              outline: "none", textTransform: "uppercase",
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleCouponApply}
+            disabled={couponStatus === "checking" || !couponCode.trim()}
+            style={{
+              padding: "10px 18px", borderRadius: "8px", border: "none",
+              background: couponStatus === "checking" ? "#94a3b8" : "var(--celeste-dark, #0ea5e9)",
+              color: "#fff", fontWeight: 700,
+              cursor: couponStatus === "checking" || !couponCode.trim() ? "default" : "pointer",
+              fontSize: "0.9rem", transition: "background 0.15s", whiteSpace: "nowrap",
+            }}
+          >
+            {couponStatus === "checking" ? "..." : "Aplicar"}
+          </button>
+        </div>
+        {couponStatus === "valid" && (
+          <p style={{ margin: "6px 0 0", fontSize: "0.82rem", color: "#16a34a", fontWeight: 600 }}>
+            ✓ Código aplicado — 10% de descuento en toda la compra
+          </p>
+        )}
+        {couponStatus === "invalid" && (
+          <p style={{ margin: "6px 0 0", fontSize: "0.82rem", color: "#dc2626" }}>
+            {couponError}
+          </p>
+        )}
+      </div>
+
+      {/* Banner de descuento activo */}
+      {couponActive && (
         <div style={{
           background: "linear-gradient(135deg,#fef3c7,#fde68a)",
           border: "2px solid #f59e0b", borderRadius: "10px",
@@ -331,8 +412,7 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
               ¡Descuento de cumpleaños activo!
             </p>
             <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#78350f" }}>
-              10% de descuento aplicado automáticamente en esta compra
-              {profile?.pet_birthday ? ` · Cumpleaños: ${formatBirthdayDisplay(profile.pet_birthday)}` : ""}.
+              10% de descuento aplicado en esta compra
             </p>
           </div>
         </div>
@@ -366,7 +446,7 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
           shippingCost={shippingCost}
           total={total}
           loading={loading}
-          birthdayDiscount={birthdayDiscount}
+          couponActive={couponActive}
         />
       )}
     </div>
