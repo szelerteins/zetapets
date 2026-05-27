@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const { cart, totalPrice } = useCart()
   const [deliveryMethod, setDeliveryMethod] = useState("shipping")
   const [codigoPostal,   setCodigoPostal]   = useState("")
+  const [discountAmount, setDiscountAmount] = useState(0)
   const shippingCost = getShippingCost(codigoPostal, totalPrice, deliveryMethod)
 
   return (
@@ -33,6 +34,7 @@ export default function CheckoutPage() {
                 deliveryMethod={deliveryMethod}
                 setDeliveryMethod={setDeliveryMethod}
                 onCodigoPostalChange={setCodigoPostal}
+                onDiscountChange={setDiscountAmount}
               />
             </div>
 
@@ -62,6 +64,12 @@ export default function CheckoutPage() {
                     <span>Subtotal</span>
                     <span>{formatPrice(totalPrice)}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="summary-line" style={{ color: "#b45309", fontWeight: 600 }}>
+                      <span>🎂 Descuento (-10%)</span>
+                      <span>-{formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
                   <div className="summary-line">
                     <span>{deliveryMethod === "pickup" ? "Retiro en local" : "Envío"}</span>
                     <span style={{ color: shippingCost === 0 ? "var(--verde-dark)" : "inherit", fontWeight: shippingCost === 0 ? 700 : 400 }}>
@@ -70,7 +78,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="summary-line total">
                     <span>Total</span>
-                    <span>{formatPrice(totalPrice + shippingCost)}</span>
+                    <span>{formatPrice(totalPrice - discountAmount + shippingCost)}</span>
                   </div>
                 </div>
 

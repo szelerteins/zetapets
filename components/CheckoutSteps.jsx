@@ -227,7 +227,7 @@ function Step2({ data, deliveryMethod, onBack, onConfirm, subtotal, shippingCost
   )
 }
 
-export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryMethod: propSetMethod, onCodigoPostalChange }) {
+export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryMethod: propSetMethod, onCodigoPostalChange, onDiscountChange }) {
   const { totalPrice, cart, clearCart } = useCart()
   const { user, profile }               = useAuth()
   const [step, setStep]                 = useState(1)
@@ -277,6 +277,11 @@ export default function CheckoutSteps({ deliveryMethod: propMethod, setDeliveryM
   const couponActive   = couponStatus === "valid"
   const discountAmount = couponActive ? Math.round(totalPrice * 0.1) : 0
   const effectivePrice = totalPrice - discountAmount
+
+  useEffect(() => {
+    if (onDiscountChange) onDiscountChange(discountAmount)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountAmount])
 
   function handleChange(field, value) {
     setUserData((prev) => ({ ...prev, [field]: value }))
