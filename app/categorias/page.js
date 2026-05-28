@@ -5,13 +5,13 @@ import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { categories } from "../../data/categories"
-import { products } from "../../data/products"
 import ProductGrid from "../../components/ProductGrid"
 import { MdOutlineInventory2 } from "react-icons/md"
 
 function CategoriasContent() {
   const searchParams = useSearchParams()
   const [activeId, setActiveId] = useState(null)
+  const [allProducts, setAllProducts] = useState([])
   const productsSectionRef = useRef(null)
 
   useEffect(() => {
@@ -19,7 +19,13 @@ function CategoriasContent() {
     setActiveId(param || null)
   }, [searchParams])
 
-  // Scroll suave a los productos cuando se selecciona una categoría
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data) => setAllProducts(Array.isArray(data.data) ? data.data : []))
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (activeId && productsSectionRef.current) {
       setTimeout(() => {
@@ -30,8 +36,8 @@ function CategoriasContent() {
 
   const activeCat = categories.find((c) => c.id === activeId)
   const filtered = activeId
-    ? products.filter(
-        (p) => p.category.toLowerCase() === (activeCat?.name.toLowerCase() ?? "")
+    ? allProducts.filter(
+        (p) => p.category?.toLowerCase() === (activeCat?.name.toLowerCase() ?? "")
       )
     : []
 

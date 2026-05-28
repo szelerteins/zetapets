@@ -56,9 +56,7 @@ export default function ProductCard({ product }) {
   )
   const [added, setAdded] = useState(false)
 
-  // Supabase uses image_url, legacy static data uses image
   const image = product.images?.[0] || product.image_url || product.image
-
   const gradient = cardGradients[strHash(String(product.id)) % cardGradients.length]
   const CategoryIcon = CATEGORY_ICONS[product.category] || MdOutlineCategory
 
@@ -98,6 +96,21 @@ export default function ProductCard({ product }) {
           <h3 className="product-name">{product.name}</h3>
         </Link>
         <p className="product-desc">{product.description}</p>
+
+        {product.color_variants?.length > 0 && (
+          <div className="product-variants" style={{ gap: 6 }}>
+            {product.color_variants.map((cv) => (
+              <span
+                key={cv.color}
+                title={cv.color}
+                style={{
+                  display: "inline-block", width: 18, height: 18, borderRadius: "50%",
+                  background: cv.hex || "#ccc", border: "1px solid #ddd",
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {product.variants?.length > 0 && (
           <div className="product-variants">

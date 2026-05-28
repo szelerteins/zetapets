@@ -58,6 +58,9 @@ export default function ProductoDetalleClient({ product, related = [] }) {
   const [selected, setSelected] = useState(
     product.variants?.length ? product.variants[0] : null
   )
+  const [selectedColor, setSelectedColor] = useState(
+    product.color_variants?.length ? product.color_variants[0] : null
+  )
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
 
@@ -68,9 +71,16 @@ export default function ProductoDetalleClient({ product, related = [] }) {
     f => f && f.trim() && f !== "N/A" && !f.endsWith(": N/A")
   )
 
+  const variantLabel = [selectedColor?.color, selected].filter(Boolean).join(" / ") || null
+
+  function handleColorSelect(cv) {
+    setSelectedColor(cv)
+    if (cv.image_url) setActiveImage(cv.image_url)
+  }
+
   function handleAdd() {
     for (let i = 0; i < qty; i++) {
-      addToCart({ ...product, image: activeImage }, selected)
+      addToCart({ ...product, image: activeImage }, variantLabel)
     }
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
@@ -146,11 +156,35 @@ export default function ProductoDetalleClient({ product, related = [] }) {
 
             <p className="product-detail-price">{formatPrice(product.price)}</p>
 
-            {/* Variantes */}
+            {/* Variantes de color */}
+            {product.color_variants?.length > 0 && (
+              <div className="product-detail-variants">
+                <p className="product-detail-variants-label">
+                  Color: <strong>{selectedColor?.color}</strong>
+                </p>
+                <div className="product-variants" style={{ gap: 8 }}>
+                  {product.color_variants.map((cv) => (
+                    <button
+                      key={cv.color}
+                      title={cv.color}
+                      onClick={() => handleColorSelect(cv)}
+                      style={{
+                        width: 32, height: 32, borderRadius: "50%",
+                        background: cv.hex || "#ccc",
+                        border: selectedColor?.color === cv.color ? "3px solid var(--primary)" : "2px solid #ddd",
+                        cursor: "pointer", padding: 0, flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Variantes de talle */}
             {product.variants?.length > 0 && (
               <div className="product-detail-variants">
                 <p className="product-detail-variants-label">
-                  Variante: <strong>{selected}</strong>
+                  Talle: <strong>{selected}</strong>
                 </p>
                 <div className="product-variants">
                   {product.variants.map((v) => (
