@@ -1196,6 +1196,10 @@ img { max-width: 100%; display: block; }
 .product-badge.destacado { background: #f59e0b; }
 .product-badge.pro { background: #8b5cf6; }
 .product-badge.oferta { background: #ef4444; }
+.product-badge.sinstock { background: #6B7280; }
+
+.product-card--out-of-stock .product-image { opacity: 0.55; }
+.product-card--out-of-stock .product-image img { filter: grayscale(0.4); }
 
 .product-body {
   padding: 20px;

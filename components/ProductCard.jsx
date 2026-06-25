@@ -59,16 +59,18 @@ export default function ProductCard({ product }) {
   const image = product.images?.[0] || product.image_url || product.image
   const gradient = cardGradients[strHash(String(product.id)) % cardGradients.length]
   const CategoryIcon = CATEGORY_ICONS[product.category] || MdOutlineCategory
+  const outOfStock = (product.stock ?? 0) <= 0
 
   function handleAdd(e) {
     e.preventDefault()
+    if (outOfStock) return
     addToCart({ ...product, image }, selected)
     setAdded(true)
     setTimeout(() => setAdded(false), 1200)
   }
 
   return (
-    <article className="product-card product-card--clickable">
+    <article className={`product-card product-card--clickable ${outOfStock ? "product-card--out-of-stock" : ""}`}>
       <Link href={`/productos/${product.id}`} className="product-card-link" aria-label={product.name}>
         <div className="product-image" style={!image ? { background: gradient } : {}}>
           {image ? (
@@ -82,7 +84,9 @@ export default function ProductCard({ product }) {
           ) : (
             <CategoryIcon size={52} className="product-category-icon" />
           )}
-          {product.badge && (
+          {outOfStock ? (
+            <span className="product-badge sinstock">Sin stock</span>
+          ) : product.badge && (
             <span className={`product-badge ${badgeClass[product.badge] || ""}`}>
               {product.badge}
             </span>
@@ -131,9 +135,10 @@ export default function ProductCard({ product }) {
           <button
             className={`btn btn-sm ${added ? "btn-green" : "btn-primary"}`}
             onClick={handleAdd}
-            style={{ transition: "all 0.3s ease" }}
+            disabled={outOfStock}
+            style={{ transition: "all 0.3s ease", opacity: outOfStock ? 0.6 : 1, cursor: outOfStock ? "not-allowed" : "pointer" }}
           >
-            {added ? (
+            {outOfStock ? "Sin stock" : added ? (
               <><MdOutlineCheckCircle size={15} style={{ verticalAlign: "middle", marginRight: 4 }} />Agregado</>
             ) : (
               "+ Agregar"

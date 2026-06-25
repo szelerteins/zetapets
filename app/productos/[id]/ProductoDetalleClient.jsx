@@ -66,6 +66,7 @@ export default function ProductoDetalleClient({ product, related = [] }) {
 
   const gradient = cardGradients[strHash(String(product.id)) % cardGradients.length]
   const CategoryIcon = CATEGORY_ICONS[product.category] || MdOutlineCategory
+  const outOfStock = (product.stock ?? 0) <= 0
 
   const activeFeatures = (product.features || []).filter(
     f => f && f.trim() && f !== "N/A" && !f.endsWith(": N/A")
@@ -79,6 +80,7 @@ export default function ProductoDetalleClient({ product, related = [] }) {
   }
 
   function handleAdd() {
+    if (outOfStock) return
     for (let i = 0; i < qty; i++) {
       addToCart({ ...product, image: activeImage }, variantLabel)
     }
@@ -120,7 +122,9 @@ export default function ProductoDetalleClient({ product, related = [] }) {
               ) : (
                 <CategoryIcon size={80} className="product-detail-emoji" style={{ opacity: 0.55 }} />
               )}
-              {product.badge && (
+              {outOfStock ? (
+                <span className="product-badge sinstock">Sin stock</span>
+              ) : product.badge && (
                 <span className={`product-badge ${badgeClass[product.badge] || ""}`}>
                   {product.badge}
                 </span>
@@ -215,9 +219,12 @@ export default function ProductoDetalleClient({ product, related = [] }) {
               <button
                 className={`btn btn-lg ${added ? "btn-green" : "btn-primary"}`}
                 onClick={handleAdd}
-                style={{ transition: "all 0.3s ease", flex: 1 }}
+                disabled={outOfStock}
+                style={{ transition: "all 0.3s ease", flex: 1, opacity: outOfStock ? 0.6 : 1, cursor: outOfStock ? "not-allowed" : "pointer" }}
               >
-                {added ? (
+                {outOfStock ? (
+                  "Sin stock"
+                ) : added ? (
                   <><MdOutlineCheckCircle size={18} style={{ verticalAlign: "middle", marginRight: 6 }} />¡Agregado al carrito!</>
                 ) : (
                   <><MdOutlineShoppingCart size={18} style={{ verticalAlign: "middle", marginRight: 6 }} />Agregar al carrito</>
