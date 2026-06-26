@@ -4,19 +4,35 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
-const heroProducts = [
-  { src: "/productos/comedero-v2.jpg",     name: "Comedero Automático V2",    price: "$79.990", href: "/productos/13" },
-  { src: "/productos/dispenser-comida.jpg", name: "Dispenser Inteligente",     price: "$52.990", href: "/productos/3"  },
-  { src: "/productos/bebedero.jpg",         name: "Bebedero con Filtro",       price: "$24.990", href: "/productos/6"  },
-  { src: "/productos/collar-airtag.jpg",    name: "Collar con AirTag",         price: "$12.990", href: "/productos/8"  },
-  { src: "/productos/airtag.jpg",           name: "AirTag Apple",              price: "$29.990", href: "/productos/9"  },
-]
+function formatPrice(n) {
+  return "$" + Number(n).toLocaleString("es-AR")
+}
 
 export default function Hero() {
+  const [heroProducts, setHeroProducts] = useState([])
   const [current, setCurrent] = useState(0)
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
+    fetch("/api/products?limit=50")
+      .then((r) => r.json())
+      .then(({ data }) => {
+        const withImage = (data || [])
+          .filter((p) => (p.stock ?? 0) > 0 && (p.images?.[0] || p.image_url))
+          .slice(0, 6)
+          .map((p) => ({
+            src: p.images?.[0] || p.image_url,
+            name: p.name,
+            price: formatPrice(p.price),
+            href: `/productos/${p.id}`,
+          }))
+        setHeroProducts(withImage)
+      })
+      .catch(() => setHeroProducts([]))
+  }, [])
+
+  useEffect(() => {
+    if (heroProducts.length < 2) return
     const interval = setInterval(() => {
       setFading(true)
       setTimeout(() => {
@@ -25,7 +41,7 @@ export default function Hero() {
       }, 350)
     }, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [heroProducts.length])
 
   const product = heroProducts[current]
 
@@ -71,26 +87,28 @@ export default function Hero() {
         <div className="hero-split-right">
 
           {/* Product card */}
-          <Link
-            href={product.href}
-            className={`hero-product-card hero-product-card--link ${fading ? "hero-card-fade-out" : "hero-card-fade-in"}`}
-          >
-            <div className="hero-product-img">
-              <Image
-                src={product.src}
-                alt={product.name}
-                fill
-                style={{ objectFit: "contain" }}
-                sizes="(max-width: 768px) 80vw, 400px"
-                priority
-              />
-            </div>
-            <div className="hero-product-info">
-              <span className="hero-product-name">{product.name}</span>
-              <span className="hero-product-price">{product.price}</span>
-              <span className="hero-product-cta">Ver producto →</span>
-            </div>
-          </Link>
+          {product && (
+            <Link
+              href={product.href}
+              className={`hero-product-card hero-product-card--link ${fading ? "hero-card-fade-out" : "hero-card-fade-in"}`}
+            >
+              <div className="hero-product-img">
+                <Image
+                  src={product.src}
+                  alt={product.name}
+                  fill
+                  style={{ objectFit: "contain" }}
+                  sizes="(max-width: 768px) 80vw, 400px"
+                  priority
+                />
+              </div>
+              <div className="hero-product-info">
+                <span className="hero-product-name">{product.name}</span>
+                <span className="hero-product-price">{product.price}</span>
+                <span className="hero-product-cta">Ver producto →</span>
+              </div>
+            </Link>
+          )}
 
           {/* Dots indicator */}
           <div className="hero-product-dots">
