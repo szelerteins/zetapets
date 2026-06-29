@@ -4,6 +4,8 @@ import CategorySection from "../components/CategorySection"
 import ProductGrid from "../components/ProductGrid"
 import { getActiveProducts } from "../lib/supabase/services"
 
+export const dynamic = "force-dynamic"
+
 const BenefitIcons = {
   truck: (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
