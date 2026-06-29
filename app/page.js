@@ -2,7 +2,7 @@ import Link from "next/link"
 import Hero from "../components/Hero"
 import CategorySection from "../components/CategorySection"
 import ProductGrid from "../components/ProductGrid"
-import { products } from "../data/products"
+import { getActiveProducts } from "../lib/supabase/services"
 
 const BenefitIcons = {
   truck: (
@@ -35,8 +35,11 @@ const benefits = [
 ]
 
 
-export default function HomePage() {
-  const featured = products.slice(0, 6)
+export default async function HomePage() {
+  const allProducts = await getActiveProducts()
+  const featured = allProducts
+    .filter((p) => (p.stock ?? 0) > 0 && (p.images?.[0] || p.image_url))
+    .slice(0, 6)
 
   return (
     <>

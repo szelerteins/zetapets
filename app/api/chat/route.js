@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getAllProducts } from "../../../lib/store/products"
+import { getActiveProducts } from "../../../lib/supabase/services"
 
 const WA_NUMBER = "5491131451107"
 
@@ -35,10 +35,10 @@ export async function POST(request) {
 
     const { messages } = body
 
-    const products = getAllProducts()
+    const products = await getActiveProducts()
 
     const productList = products
-      .filter((p) => p.badge !== "TEST")
+      .filter((p) => (p.stock ?? 0) > 0)
       .map((p) => {
         let entry = `• ${p.name} (ID: ${p.id}) — $${Number(p.price).toLocaleString("es-AR")} — Categoría: ${p.category}`
         if (p.description) entry += `\n  Descripción: ${p.description}`
