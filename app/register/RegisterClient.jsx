@@ -1,81 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "../../context/AuthContext"
-import { registerSchema, parseSchema } from "../../lib/validations"
-import { MdOutlineMarkEmailRead } from "react-icons/md"
 
 export default function RegisterClient() {
-  const router = useRouter()
-  const { register, loginWithGoogle } = useAuth()
-
-  const [form, setForm] = useState({
-    nombre: "", apellido: "", email: "", password: "", confirmPassword: "",
-    petBirthday: "", birthdayEmailConsent: false,
-  })
-  const [errors, setErrors] = useState({})
-  const [apiError, setApiError] = useState("")
+  const { loginWithGoogle } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [confirmEmail, setConfirmEmail] = useState("")
 
-  function handleChange(e) {
-    const { name, value, type, checked } = e.target
-    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }))
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }))
-    setApiError("")
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setApiError("")
-
-    const { data, errors: ve } = parseSchema(registerSchema, form)
-    if (ve) { setErrors(ve); return }
-
+  async function handleGoogleClick() {
     setLoading(true)
-    const result = await register({
-      ...data,
-      petBirthday:           form.petBirthday || null,
-      birthdayEmailConsent:  form.birthdayEmailConsent,
-    })
+    await loginWithGoogle()
     setLoading(false)
-
-    if (result.ok) {
-      if (result.confirmationRequired) {
-        setConfirmEmail(result.email)
-      } else {
-        router.push("/")
-        router.refresh()
-      }
-    } else {
-      if (result.details) setErrors(result.details)
-      else setApiError(result.error)
-    }
-  }
-
-  // Pantalla de confirmación pendiente
-  if (confirmEmail) {
-    return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="confirm-email-icon"><MdOutlineMarkEmailRead size={56} style={{ color: "var(--celeste-dark)", margin: "0 auto" }} /></div>
-          <h1 className="auth-title">¡Revisá tu email!</h1>
-          <p className="auth-sub">
-            Te enviamos un link de confirmación a
-          </p>
-          <p className="confirm-email-address">{confirmEmail}</p>
-          <p className="confirm-email-hint">
-            Hacé clic en el link del mail para activar tu cuenta. <br />
-            Si no lo ves, revisá la carpeta de spam.
-          </p>
-          <Link href="/login" className="admin-login-btn" style={{ display: "block", textAlign: "center", textDecoration: "none", marginTop: 24 }}>
-            Ir al inicio de sesión
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -91,7 +27,7 @@ export default function RegisterClient() {
         <button
           type="button"
           className="auth-btn-google"
-          onClick={loginWithGoogle}
+          onClick={handleGoogleClick}
           disabled={loading}
         >
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -104,118 +40,10 @@ export default function RegisterClient() {
           Registrarse con Google
         </button>
 
-        <div className="auth-divider">o</div>
-
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          <div className="auth-grid-2">
-            <div className="admin-form-group">
-              <label htmlFor="nombre">Nombre</label>
-              <input
-                id="nombre" name="nombre" type="text"
-                value={form.nombre} onChange={handleChange}
-                placeholder="Juan" autoComplete="given-name"
-                disabled={loading}
-              />
-              {errors.nombre && <span className="field-error">{errors.nombre}</span>}
-            </div>
-
-            <div className="admin-form-group">
-              <label htmlFor="apellido">Apellido</label>
-              <input
-                id="apellido" name="apellido" type="text"
-                value={form.apellido} onChange={handleChange}
-                placeholder="Pérez" autoComplete="family-name"
-                disabled={loading}
-              />
-              {errors.apellido && <span className="field-error">{errors.apellido}</span>}
-            </div>
-          </div>
-
-          <div className="admin-form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email" name="email" type="email"
-              value={form.email} onChange={handleChange}
-              placeholder="tu@email.com" autoComplete="email"
-              disabled={loading}
-            />
-            {errors.email && <span className="field-error">{errors.email}</span>}
-          </div>
-
-          <div className="auth-grid-2">
-            <div className="admin-form-group">
-              <label htmlFor="password">Contraseña</label>
-              <input
-                id="password" name="password" type="password"
-                value={form.password} onChange={handleChange}
-                placeholder="Mínimo 8 caracteres" autoComplete="new-password"
-                disabled={loading}
-              />
-              {errors.password && <span className="field-error">{errors.password}</span>}
-            </div>
-
-            <div className="admin-form-group">
-              <label htmlFor="confirmPassword">Repetir contraseña</label>
-              <input
-                id="confirmPassword" name="confirmPassword" type="password"
-                value={form.confirmPassword} onChange={handleChange}
-                placeholder="••••••••" autoComplete="new-password"
-                disabled={loading}
-              />
-              {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
-            </div>
-          </div>
-
-          {/* Cumpleaños de mascota — opcional */}
-          <div style={{
-            background: "#f0fdf4", border: "1px solid #bbf7d0",
-            borderRadius: "10px", padding: "18px 20px", marginTop: "4px",
-          }}>
-            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#166534", fontSize: "0.92rem", display: "flex", alignItems: "center", gap: "6px" }}>
-              🎂 Cumpleaños de tu mascota
-              <span style={{ fontWeight: 400, color: "#64748b", fontSize: "0.82rem" }}>(opcional)</span>
-            </p>
-            <p style={{ margin: "0 0 14px", fontSize: "0.82rem", color: "#475569", lineHeight: 1.5 }}>
-              Registrá la fecha y una semana antes te mandamos un <strong>10% de descuento</strong> en toda la tienda.
-            </p>
-            <div className="admin-form-group" style={{ marginBottom: form.petBirthday ? "12px" : "0" }}>
-              <label htmlFor="petBirthday" style={{ color: "#166534" }}>Fecha de nacimiento de tu mascota</label>
-              <input
-                id="petBirthday" name="petBirthday" type="date"
-                value={form.petBirthday} onChange={handleChange}
-                max={new Date().toISOString().split("T")[0]}
-                disabled={loading}
-                style={{ borderColor: "#bbf7d0" }}
-              />
-            </div>
-
-            {form.petBirthday && (
-              <label style={{
-                display: "flex", alignItems: "flex-start", gap: "10px",
-                cursor: "pointer", fontSize: "0.85rem", color: "#374151",
-              }}>
-                <input
-                  type="checkbox"
-                  name="birthdayEmailConsent"
-                  checked={form.birthdayEmailConsent}
-                  onChange={handleChange}
-                  disabled={loading}
-                  style={{ marginTop: "2px", flexShrink: 0, accentColor: "#16a34a" }}
-                />
-                <span>
-                  Acepto recibir un email con mi descuento de cumpleaños de ZetaPets.
-                  <span style={{ color: "#64748b" }}> (Podés cancelarlo en cualquier momento desde tu cuenta.)</span>
-                </span>
-              </label>
-            )}
-          </div>
-
-          {apiError && <p className="admin-login-error">{apiError}</p>}
-
-          <button type="submit" className="admin-login-btn" disabled={loading}>
-            {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
-          </button>
-        </form>
+        <p style={{ marginTop: "16px", fontSize: "0.82rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.5 }}>
+          Por el momento el registro con email está temporalmente deshabilitado.
+          Usá tu cuenta de Google para crear tu cuenta.
+        </p>
 
         <p className="auth-switch">
           ¿Ya tenés cuenta?{" "}
