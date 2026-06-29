@@ -40,11 +40,6 @@ export default function RegisterClient() {
           Registrarse con Google
         </button>
 
-        <p style={{ marginTop: "16px", fontSize: "0.82rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.5 }}>
-          Por el momento el registro con email está temporalmente deshabilitado.
-          Usá tu cuenta de Google para crear tu cuenta.
-        </p>
-
         <p className="auth-switch">
           ¿Ya tenés cuenta?{" "}
           <Link href="/login" className="auth-link">Iniciá sesión</Link>
