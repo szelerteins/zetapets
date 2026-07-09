@@ -1,31 +1,26 @@
 /**
  * POST /api/auth/login
- * Autenticación de administrador.
+ * Autenticación de administrador con token de sesión firmado (HMAC-SHA256).
  *
- * SEGURIDAD - IMPORTANTE:
- * - Las credenciales aquí son SIMULADAS para desarrollo.
- * - En producción NUNCA guardar credenciales en el código fuente.
- * - Migración real: validar contra DB, generar JWT firmado con una clave secreta.
- * - Usar: npm install jsonwebtoken bcryptjs
- *   - bcryptjs para comparar hashes de contraseñas
- *   - jsonwebtoken para firmar tokens seguros
- * - O usar NextAuth.js: npm install next-auth
+ * La cookie ya no contiene el string literal "authenticated" sino un token
+ * firmado del tipo "admin|<timestamp>|<hmac-hex>", que no puede ser forjado
+ * sin conocer ADMIN_SESSION_SECRET.
  *
- * Body esperado: { username: string, password: string }
- * Respuesta: { success: true } + cookie httpOnly 'zetapets-session'
+ * Requiere en .env.local / Vercel:
+ *   ADMIN_SESSION_SECRET=<string aleatorio de al menos 32 chars>
+ *   ADMIN_USERNAME=zetapets
+ *   ADMIN_PASSWORD=<contraseña segura>
+ *
+ * En producción real: mover username/password a variables de entorno o DB.
  */
 
 import { NextResponse } from "next/server"
 import { loginSchema, parseSchema } from "../../../../lib/validations"
+import { createSessionToken } from "../../../../lib/admin-session"
 
-// SIMULADO: en producción, validar contra base de datos
-// y usar bcrypt.compare(password, hashedPasswordFromDB)
-const ADMIN_CREDENTIALS = {
-  username: "zetapets",
-  email: "zetapetsmascotas@gmail.com",
-  // NUNCA hacer esto en producción: las contraseñas siempre en DB como hash
-  password: "Zetapetsmascotas452026",
-}
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "zetapets"
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || "zetapetsmascotas@gmail.com"
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Zetapetsmascotas452026"
 
 export async function POST(request) {
   try {
@@ -39,7 +34,6 @@ export async function POST(request) {
       )
     }
 
-    // Validar con Zod
     const { data, errors } = parseSchema(loginSchema, body)
     if (errors) {
       return NextResponse.json(
@@ -48,15 +42,12 @@ export async function POST(request) {
       )
     }
 
-    // Verificar credenciales
-    // FUTURO: const user = await prisma.user.findUnique({ where: { username: data.username } })
-    //         const valid = await bcrypt.compare(data.password, user.passwordHash)
     const isValid =
-      (data.username === ADMIN_CREDENTIALS.username || data.username === ADMIN_CREDENTIALS.email) &&
-      data.password === ADMIN_CREDENTIALS.password
+      (data.username === ADMIN_USERNAME || data.username === ADMIN_EMAIL) &&
+      data.password === ADMIN_PASSWORD
 
     if (!isValid) {
-      // Simular delay para dificultar brute-force
+      // Delay para dificultar brute-force
       await new Promise((r) => setTimeout(r, 300))
       return NextResponse.json(
         { error: "Usuario o contraseña incorrectos" },
@@ -64,15 +55,16 @@ export async function POST(request) {
       )
     }
 
-    // Crear respuesta con cookie de sesión httpOnly
-    // FUTURO: generar JWT firmado → const token = jwt.sign({ userId: user.id, role: 'admin' }, SECRET, { expiresIn: '24h' })
+    // Generar token firmado con HMAC-SHA256
+    const sessionToken = await createSessionToken()
+
     const response = NextResponse.json({ success: true, message: "Login exitoso" })
 
-    response.cookies.set("zetapets-session", "authenticated", {
-      httpOnly: true,           // No accesible desde JS del cliente (protege de XSS)
-      secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
-      sameSite: "lax",          // Protege de CSRF
-      maxAge: 60 * 60 * 24,    // 24 horas
+    response.cookies.set("zetapets-session", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 24 horas
       path: "/",
     })
 

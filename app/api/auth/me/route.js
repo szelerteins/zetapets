@@ -1,33 +1,32 @@
 /**
  * GET /api/auth/me
- * Verifica si el usuario tiene sesión activa.
- * Útil para que el cliente sepa si está autenticado sin exponer la cookie.
- *
- * FUTURO: decodificar JWT y devolver datos del usuario (id, nombre, rol)
+ * Verifica si el usuario admin tiene sesión activa comprobando la firma del token.
  */
 
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { verifySessionToken } from "../../../../lib/admin-session"
 
 export async function GET() {
   try {
     const cookieStore = await cookies()
     const session = cookieStore.get("zetapets-session")
 
-    if (!session || session.value !== "authenticated") {
+    const isValid = await verifySessionToken(session?.value)
+
+    if (!isValid) {
       return NextResponse.json(
         { authenticated: false },
         { status: 401 }
       )
     }
 
-    // FUTURO: return { authenticated: true, user: { id, name, role } } desde JWT
     return NextResponse.json({
       authenticated: true,
       user: {
-        username: "zetapets",
+        username: process.env.ADMIN_USERNAME || "zetapets",
         role: "admin",
-        email: "admin@zetapets.com",
+        email: process.env.ADMIN_EMAIL || "zetapetsmascotas@gmail.com",
       },
     })
   } catch (err) {

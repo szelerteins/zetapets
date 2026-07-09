@@ -7,15 +7,44 @@ export default function ContactoPage() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState({})
   const [form, setForm] = useState({ nombre: "", email: "", asunto: "", mensaje: "" })
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }))
+    }
     if (error) setError("")
+  }
+
+  function validateForm() {
+    const errs = {}
+    const nombreTrim = form.nombre.trim()
+    if (nombreTrim.length < 2)
+      errs.nombre = "El nombre debe tener al menos 2 caracteres"
+    else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/.test(nombreTrim))
+      errs.nombre = "El nombre solo puede contener letras"
+
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = "Email inválido"
+
+    if (!form.asunto)
+      errs.asunto = "Seleccioná un asunto"
+
+    if (form.mensaje.trim().length < 10)
+      errs.mensaje = "El mensaje debe tener al menos 10 caracteres"
+
+    return errs
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const errs = validateForm()
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs)
+      return
+    }
     setLoading(true)
     setError("")
 
@@ -195,7 +224,7 @@ export default function ContactoPage() {
                 </button>
               </div>
             ) : (
-              <form className="contact-form" onSubmit={handleSubmit}>
+              <form className="contact-form" onSubmit={handleSubmit} noValidate>
                 <div className="form-group">
                   <label htmlFor="nombre">Nombre completo</label>
                   <input
@@ -203,10 +232,13 @@ export default function ContactoPage() {
                     name="nombre"
                     type="text"
                     placeholder="Tu nombre"
-                    required
                     value={form.nombre}
                     onChange={handleChange}
+                    className={fieldErrors.nombre ? "input-error" : ""}
                   />
+                  {fieldErrors.nombre && (
+                    <span className="field-error">{fieldErrors.nombre}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="email">Email</label>
@@ -215,19 +247,22 @@ export default function ContactoPage() {
                     name="email"
                     type="email"
                     placeholder="tu@email.com"
-                    required
                     value={form.email}
                     onChange={handleChange}
+                    className={fieldErrors.email ? "input-error" : ""}
                   />
+                  {fieldErrors.email && (
+                    <span className="field-error">{fieldErrors.email}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="asunto">Asunto</label>
                   <select
                     id="asunto"
                     name="asunto"
-                    required
                     value={form.asunto}
                     onChange={handleChange}
+                    className={fieldErrors.asunto ? "input-error" : ""}
                   >
                     <option value="">Seleccioná un asunto</option>
                     <option>Consulta sobre un producto</option>
@@ -235,6 +270,9 @@ export default function ContactoPage() {
                     <option>Devoluciones y garantías</option>
                     <option>Otro</option>
                   </select>
+                  {fieldErrors.asunto && (
+                    <span className="field-error">{fieldErrors.asunto}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="mensaje">Mensaje</label>
@@ -242,10 +280,13 @@ export default function ContactoPage() {
                     id="mensaje"
                     name="mensaje"
                     placeholder="Escribí tu consulta acá..."
-                    required
                     value={form.mensaje}
                     onChange={handleChange}
+                    className={fieldErrors.mensaje ? "input-error" : ""}
                   />
+                  {fieldErrors.mensaje && (
+                    <span className="field-error">{fieldErrors.mensaje}</span>
+                  )}
                 </div>
                 {error && (
                   <p style={{ color: "#ef4444", fontSize: "0.88rem", marginBottom: "8px", fontWeight: 500 }}>

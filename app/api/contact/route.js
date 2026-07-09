@@ -1,36 +1,31 @@
 /**
- * app/api/contact/route.js
- *
- * Recibe el formulario de contacto y envía un email a zetapetsmascotas@gmail.com
- * usando nodemailer + Gmail SMTP con App Password.
- *
- * VARIABLES DE ENTORNO requeridas (en .env.local y en Vercel > Settings > Env):
- *   GMAIL_USER         → zetapetsmascotas@gmail.com
- *   GMAIL_APP_PASSWORD → contraseña de aplicación de 16 caracteres
- *
- * Cómo obtener la App Password de Gmail:
- *   1. Ir a myaccount.google.com → Seguridad → Verificación en dos pasos (activar)
- *   2. Ir a myaccount.google.com → Seguridad → Contraseñas de aplicaciones
- *   3. Seleccionar "Correo" + "Otro (nombre personalizado)" → Generar
- *   4. Copiar la clave de 16 caracteres y pegarla en GMAIL_APP_PASSWORD
+ * POST /api/contact
+ * Recibe el formulario de contacto, valida con Zod y envía email.
  */
 
 import nodemailer from "nodemailer"
+import { contactSchema, parseSchema } from "../../../lib/validations"
 
 export async function POST(request) {
   try {
-    const body = await request.json()
-    const { nombre, email, asunto, mensaje } = body
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return Response.json({ error: "Body inválido" }, { status: 400 })
+    }
 
-    // Validación básica
-    if (!nombre || !email || !asunto || !mensaje) {
+    // Validar con Zod (nombre, email, asunto, mensaje)
+    const { data, errors } = parseSchema(contactSchema, body)
+    if (errors) {
       return Response.json(
-        { error: "Todos los campos son requeridos" },
+        { error: "Datos inválidos", details: errors },
         { status: 400 }
       )
     }
 
-    // Verificar que las variables de entorno están configuradas
+    const { nombre, email, asunto, mensaje } = data
+
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
       console.error("Faltan las variables de entorno GMAIL_USER o GMAIL_APP_PASSWORD")
       return Response.json(
@@ -39,7 +34,6 @@ export async function POST(request) {
       )
     }
 
-    // Configurar transporter de nodemailer con Gmail
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -48,11 +42,10 @@ export async function POST(request) {
       },
     })
 
-    // Armar el email
     await transporter.sendMail({
-      from: `"ZetaPets Contacto" <${process.env.GMAIL_USER}>`,
-      replyTo: `"${nombre}" <${email}>`,   // al responder, va al cliente
-      to:      process.env.GMAIL_USER,      // zetapetsmascotas@gmail.com
+      from:    `"ZetaPets Contacto" <${process.env.GMAIL_USER}>`,
+      replyTo: `"${nombre}" <${email}>`,
+      to:      process.env.GMAIL_USER,
       subject: `[ZetaPets Contacto] ${asunto}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -90,7 +83,6 @@ export async function POST(request) {
           </div>
         </div>
       `,
-      // Versión texto plano como fallback
       text: `Nueva consulta en ZetaPets\n\nNombre: ${nombre}\nEmail: ${email}\nAsunto: ${asunto}\n\nMensaje:\n${mensaje}`,
     })
 

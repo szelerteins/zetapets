@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { getShippingCost, PICKUP_INFO, FREE_SHIPPING_THRESHOLD } from "../lib/shipping-zones"
+import { checkoutSchema, parseSchema } from "../lib/validations"
 import {
   MdOutlineLocalShipping,
   MdOutlineStorefront,
@@ -39,19 +40,39 @@ function Step1({ data, onChange, deliveryMethod, setDeliveryMethod, onNext, ship
   const isPickup = deliveryMethod === "pickup"
 
   function validate() {
-    const e = {}
-    if (!data.nombre.trim())   e.nombre   = "El nombre es requerido"
-    if (!data.apellido.trim()) e.apellido = "El apellido es requerido"
-    if (!data.email.trim())    e.email    = "El email es requerido"
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = "Email inválido"
-    if (!data.telefono.trim()) e.telefono = "El teléfono es requerido"
-    if (!isPickup) {
-      if (!data.direccion.trim())    e.direccion    = "La dirección es requerida"
-      if (!data.ciudad.trim())       e.ciudad       = "La ciudad es requerida"
-      if (!data.codigoPostal.trim()) e.codigoPostal = "El código postal es requerido"
+    // Usar Zod para validar campos del paso 1
+    const toValidate = {
+      nombre:       data.nombre,
+      apellido:     data.apellido,
+      email:        data.email,
+      telefono:     data.telefono,
+      // Para pickup usamos valores placeholder que pasan la validación de formato
+      direccion:    isPickup ? "pickup-local" : data.direccion,
+      codigoPostal: isPickup ? "0000"         : data.codigoPostal,
+      metodoPago:   "mercadopago",
     }
-    setErrors(e)
-    return Object.keys(e).length === 0
+
+    const { errors: zodErrors } = parseSchema(checkoutSchema, toValidate)
+    const fieldErrors = {}
+
+    if (zodErrors) {
+      if (zodErrors.nombre)   fieldErrors.nombre   = zodErrors.nombre
+      if (zodErrors.apellido) fieldErrors.apellido = zodErrors.apellido
+      if (zodErrors.email)    fieldErrors.email    = zodErrors.email
+      if (zodErrors.telefono) fieldErrors.telefono = zodErrors.telefono
+      if (!isPickup) {
+        if (zodErrors.direccion)    fieldErrors.direccion    = zodErrors.direccion
+        if (zodErrors.codigoPostal) fieldErrors.codigoPostal = zodErrors.codigoPostal
+      }
+    }
+
+    // Ciudad no está en checkoutSchema, se valida aparte
+    if (!isPickup && !data.ciudad.trim()) {
+      fieldErrors.ciudad = "La ciudad es requerida"
+    }
+
+    setErrors(fieldErrors)
+    return Object.keys(fieldErrors).length === 0
   }
 
   function field(name, label, type = "text", placeholder = "") {

@@ -3,18 +3,16 @@
  *
  * Maneja dos sistemas de auth en paralelo:
  *
- * 1. Admin (/admin/*)  → cookie zetapets-session (simple, sin Supabase)
+ * 1. Admin (/admin/*)  → cookie zetapets-session con token HMAC-SHA256 firmado
  * 2. Clientes (/account, /orders) → sesión Supabase (JWT en cookie)
  *
- * El middleware de Supabase SIEMPRE refresca el token aunque la ruta
- * no esté protegida, para que los Server Components tengan sesión fresca.
+ * El token de admin ya no es el string literal "authenticated" sino un token
+ * firmado que no puede ser forjado sin conocer ADMIN_SESSION_SECRET.
  */
 
 import { NextResponse } from "next/server"
 import { updateSession } from "./lib/supabase/middleware"
-
-const ADMIN_COOKIE = "zetapets-session"
-const ADMIN_VALUE  = "authenticated"
+import { verifySessionToken } from "./lib/admin-session"
 
 // Rutas que requieren login de cliente (Supabase)
 const PROTECTED_CUSTOMER = ["/account", "/orders"]
@@ -24,8 +22,8 @@ export async function middleware(request) {
 
   // ── 1. Rutas /admin/* ──────────────────────────────────────
   if (pathname.startsWith("/admin")) {
-    const adminSession = request.cookies.get(ADMIN_COOKIE)
-    const isAdmin = adminSession?.value === ADMIN_VALUE
+    const adminSession = request.cookies.get("zetapets-session")
+    const isAdmin = await verifySessionToken(adminSession?.value)
 
     if (isAdmin && pathname === "/admin") {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url))
@@ -44,7 +42,6 @@ export async function middleware(request) {
   const isProtected = PROTECTED_CUSTOMER.some((p) => pathname.startsWith(p))
 
   if (!hasSupabase) {
-    // Sin Supabase configurado: bloquear rutas protegidas con redirect a login
     if (isProtected) {
       const loginUrl = new URL("/login", request.url)
       loginUrl.searchParams.set("redirect", pathname)
@@ -66,7 +63,6 @@ export async function middleware(request) {
 }
 
 export const config = {
-  // Solo aplicar a rutas relevantes (no a todas las páginas)
   matcher: [
     "/admin/:path*",
     "/account/:path*",
