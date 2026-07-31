@@ -51,16 +51,19 @@ function strHash(str) {
 export default function ProductoDetalleClient({ product, related = [] }) {
   const { addToCart } = useCart()
 
-  const mainImage = product.images?.[0] || product.image_url
+  const firstColor = product.color_variants?.length ? product.color_variants[0] : null
+  const initialImages = firstColor?.images?.length
+    ? firstColor.images
+    : (product.images?.length ? product.images : (product.image_url ? [product.image_url] : []))
+  const mainImage = initialImages[0]
+
   const [activeImage, setActiveImage] = useState(mainImage)
-  const allImages = product.images?.length ? product.images : (product.image_url ? [product.image_url] : [])
+  const [galleryImages, setGalleryImages] = useState(initialImages)
 
   const [selected, setSelected] = useState(
     product.variants?.length ? product.variants[0] : null
   )
-  const [selectedColor, setSelectedColor] = useState(
-    product.color_variants?.length ? product.color_variants[0] : null
-  )
+  const [selectedColor, setSelectedColor] = useState(firstColor)
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
 
@@ -76,7 +79,9 @@ export default function ProductoDetalleClient({ product, related = [] }) {
 
   function handleColorSelect(cv) {
     setSelectedColor(cv)
-    if (cv.image_url) setActiveImage(cv.image_url)
+    const imgs = cv.images?.length ? cv.images : (cv.image_url ? [cv.image_url] : galleryImages)
+    setGalleryImages(imgs)
+    setActiveImage(imgs[0])
   }
 
   function handleAdd() {
@@ -132,9 +137,9 @@ export default function ProductoDetalleClient({ product, related = [] }) {
             </div>
 
             {/* Miniaturas */}
-            {allImages.length > 1 && (
+            {galleryImages.length > 1 && (
               <div className="product-detail-thumbs">
-                {allImages.map((img, i) => (
+                {galleryImages.map((img, i) => (
                   <button
                     key={i}
                     className={`product-thumb-btn ${activeImage === img ? "active" : ""}`}
