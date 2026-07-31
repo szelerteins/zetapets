@@ -134,6 +134,45 @@ export default function ProductoDetalleClient({ product, related = [] }) {
                   {product.badge}
                 </span>
               )}
+
+              {/* Flechas de navegación */}
+              {galleryImages.length > 1 && (() => {
+                const idx = galleryImages.indexOf(activeImage)
+                return (
+                  <>
+                    {idx > 0 && (
+                      <button
+                        onClick={() => setActiveImage(galleryImages[idx - 1])}
+                        style={{
+                          position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+                          background: "rgba(255,255,255,0.85)", border: "none", borderRadius: "50%",
+                          width: 36, height: 36, cursor: "pointer", display: "flex",
+                          alignItems: "center", justifyContent: "center",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)", zIndex: 2,
+                        }}
+                        aria-label="Imagen anterior"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                      </button>
+                    )}
+                    {idx < galleryImages.length - 1 && (
+                      <button
+                        onClick={() => setActiveImage(galleryImages[idx + 1])}
+                        style={{
+                          position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                          background: "rgba(255,255,255,0.85)", border: "none", borderRadius: "50%",
+                          width: 36, height: 36, cursor: "pointer", display: "flex",
+                          alignItems: "center", justifyContent: "center",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)", zIndex: 2,
+                        }}
+                        aria-label="Imagen siguiente"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                      </button>
+                    )}
+                  </>
+                )
+              })()}
             </div>
 
             {/* Miniaturas */}
